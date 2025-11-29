@@ -1,0 +1,29 @@
+<IfModule mod_headers.c>
+  SetEnvIf Origin "^https://localfit\.store$" ACAO=$0
+  SetEnvIf Origin "^http://localhost:4200$" ACAO=$0
+  SetEnvIf Origin "^https://api\.localfit\.store$" ACAO=$0
+
+  Header always set Access-Control-Allow-Origin "%{ACAO}e" env=ACAO
+  Header always set Access-Control-Allow-Credentials "true" env=ACAO
+  Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+  Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+  Header always set Access-Control-Max-Age "86400"
+  Header always set Vary "Origin"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /localfit%20-%20Copy/ecomm_api/
+
+  # Pass Authorization header
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # Preflight (OPTIONS)
+  RewriteCond %{REQUEST_METHOD} OPTIONS
+  RewriteRule .* - [R=204,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ Router.php?request=$1 [QSA,L]
+</IfModule>

@@ -1,0 +1,100 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+/app
+/gradle
+/android
+
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
+.DS_Store
+Thumbs.db
+
+# # Exclude backend API files (separate repository)
+# ecomm_api/
+# ecomm_api_nodejs/
+# ecomm_api_old/
+# ecomm_nodejs/
+
+# Socket server (should be separate)
+socket-server/
+
+# Database and config files
+*.sql
+*.keystore
+local.properties
+*.env
+*.env.local
+*.env.production
+
+# Build artifacts
+*.apk
+*.aab
+*.idsig
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Image uploads (should be served by backend)
+e-comm-images/

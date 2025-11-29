@@ -1,0 +1,311 @@
+<div class="product-container">
+    <div class="product-container-laptop">
+
+        <!-- Modern Header -->
+        <div class="modern-header">
+            <div class="header-brand">
+                <div class="brand-container">
+                    <img src="https://i.ibb.co/MyHC2QgX/GPS-HIT-FIT-LOGO.png" alt="GPS HIT FIT Logo" class="brand-icon">
+                    <span class="brand-text">GPS HIT FIT SPORTS APPAREL</span>
+                </div>
+            </div>
+            
+            <div class="header-search">
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        class="modern-search-input"
+                        [(ngModel)]="searchTerm"
+                        (input)="onSearch()"
+                    />
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="modern-nav-btn" (click)="goToOrders()" title="Orders">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span class="nav-text">Orders</span>
+                    <span class="nav-badge notification" *ngIf="readyForPickupCount > 0">{{ readyForPickupCount }}</span>
+                </button>
+                
+                <button class="modern-nav-btn" (click)="goToCart()" title="Shopping Cart">
+                    <i class="fa-solid fa-shopping-cart"></i>
+                    <span class="nav-text">Cart</span>
+                    <span class="nav-badge" *ngIf="carts && carts.length > 0">{{ carts.length }}</span>
+                </button>
+                
+                <button class="modern-nav-btn" (click)="goToMessege()" title="Messages">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span class="nav-text">Messages</span>
+                    <span class="nav-badge notification" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                </button>
+                
+                <button class="modern-nav-btn logout-btn" (click)="logout()" title="Logout">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span class="nav-text">Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Enhanced Modern Welcome Section -->
+        <div class="enhanced-welcome">
+            <div class="welcome-background">
+                <div class="floating-shapes">
+                    <div class="shape shape-1"></div>
+                    <div class="shape shape-2"></div>
+                    <div class="shape shape-3"></div>
+                    <div class="shape shape-4"></div>
+                </div>
+            </div>
+            
+            <div class="welcome-container">
+                <div class="welcome-main">
+                    <div class="welcome-avatar">
+                        <div class="avatar-circle">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="status-indicator"></div>
+                    </div>
+                    
+                    <div class="welcome-message">
+                        <div class="greeting-line">
+                            <span class="greeting-text">Welcome back,</span>
+                            <div class="time-badge">
+                                <i class="fa-solid fa-clock"></i>
+                                <span>Today</span>
+                            </div>
+                        </div>
+                        <h1 class="user-name-display">{{ getProductAuthor({}) }}</h1>
+                        <p class="welcome-description">Ready to manage your store and discover amazing products</p>
+                    </div>
+                </div>
+                
+                <div class="welcome-dashboard">
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-banner-grid desktop-only">
+  <div class="ad-banner-large">
+    <img
+      *ngFor="let img of largeAdImages; let i = index"
+      [src]="img"
+      [class.active]="i === currentAdIndex"
+      [class.inactive]="i !== currentAdIndex"
+      alt="Ad"
+    />
+  </div>
+  <div class="ad-banner-small-top">
+    <img src="https://i.postimg.cc/mDxg6KYN/IMG-7142.jpg" alt="Ad 2">
+  </div>
+  <div class="ad-banner-small-bottom">
+    <img src="https://i.postimg.cc/t4N0HwGN/IMG-7141.jpg" alt="Ad 3">
+  </div>
+</div>
+
+        <div class="empty-state" *ngIf="allProducts && allProducts.length == 0">
+            <div class="empty-content">
+                <i class="fa-solid fa-box-open empty-icon"></i>
+                <h2 class="empty-title">No products listed yet</h2>
+                <p class="empty-subtitle">Start building your store by adding your first product</p>
+                <button class="modern-cta-btn" (click)="goToProduct()">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Your First Product</span>
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="filteredProducts && filteredProducts.length > 0" id="products-section">
+            <div class="products-grid">
+                <div *ngFor="let product of filteredProducts" class="modern-product-card">
+                    <div class="card-image-wrapper">
+                        <img [src]="getImageUrl(product.image)" class="card-image" alt="{{product.name}}">
+                        <div class="card-overlay">
+                            <div class="card-actions">
+                                <button class="action-btn view-btn" (click)="openModal(product)" title="Quick View">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button class="action-btn add-btn" (click)="openModal(product)" title="Add to Cart">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="product-info">
+                            <h3 class="product-title">{{ product.name }}</h3>
+                            <p class="product-author">by <span>{{ getProductAuthor(product) }}</span></p>
+                            
+                            <!-- Available Sizes Display -->
+                            <div class="product-sizes" *ngIf="getProductSizes(product).length > 0">
+                                <span class="sizes-label">Available:</span>
+                                <div class="sizes-list">
+                                    <span class="size-badge" *ngFor="let size of getProductSizes(product)">
+                                        {{ size }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="no-sizes" *ngIf="getProductSizes(product).length === 0">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                <span>No sizes available</span>
+                            </div>
+
+                            <!-- Stock Quantity Display -->
+                            <div class="product-stock" [ngClass]="getStockStatus(product)">
+                                <i class="fa-solid fa-boxes-stacked stock-icon"></i>
+                                <span class="stock-text">Stock: {{ getTotalQuantity(product) }}</span>
+                                <span class="stock-status-badge out-of-stock" *ngIf="getStockStatus(product) === 'out-of-stock'">Out of Stock</span>
+                                <span class="stock-status-badge low-stock" *ngIf="getStockStatus(product) === 'low-stock'">Low Stock</span>
+                                <span class="stock-status-badge in-stock" *ngIf="getStockStatus(product) === 'in-stock'">In Stock</span>
+                            </div>
+
+                            <!-- Size-Specific Stock Display -->
+                            <div class="size-stock-display" *ngIf="getSizesWithStock(product).length > 0">
+                                <span class="stock-by-size-label">Stock by Size:</span>
+                                <div class="size-stock-list">
+                                    <div class="size-stock-item" *ngFor="let sizeInfo of getSizesWithStock(product)"
+                                         [ngClass]="{'out-of-stock': !sizeInfo.inStock, 'low-stock': sizeInfo.inStock && sizeInfo.quantity < 3}">
+                                        <span class="size-name">{{ sizeInfo.size }}</span>
+                                        <span class="size-quantity">{{ sizeInfo.quantity }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-label">₱</span>
+                            <span class="price-value">{{ product.price }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Product Details Popup Modal -->
+<div class="popup-modal-overlay" [ngClass]="{'show': isModalOpen}" (click)="closeModal()">
+    <div class="popup-modal-content" (click)="$event.stopPropagation()">
+        <button class="popup-close-btn" (click)="closeModal()">
+            <i class="fa-solid fa-times"></i>
+        </button>
+        
+        <div class="popup-modal-body">
+            <div class="popup-product-details">
+                <div class="popup-image-section">
+                    <img class="popup-product-image" [src]="selectedProduct ? getImageUrl(selectedProduct.image) : ''" [alt]="selectedProduct?.name">
+                </div>
+                
+                <div class="popup-info-section">
+                    <h2 class="popup-product-title">{{ selectedProduct?.name }}</h2>
+                    <div class="popup-price">₱ {{ selectedProduct?.price }}</div>
+                    <pre class="popup-product-description">{{ selectedProduct?.description }}</pre>
+                    
+                    <!-- Size selection -->
+                    <div class="popup-size-section">
+                        <label class="popup-label"><strong>Select Size:</strong></label>
+                        <select [(ngModel)]="selectedSize" (ngModelChange)="onSizeChange()" class="popup-size-select">
+                            <option value="" disabled>Choose size</option>
+                            <option *ngFor="let size of getAllSizes()" [value]="size.size">
+                                {{ size.size }} {{ !size.inStock ? '(Out of Stock - Production Order)' : '' }}
+                            </option>
+                        </select>
+                        <small *ngIf="!selectedSize" class="size-error">Size is required</small>
+                        <small *ngIf="selectedSize && !isSizeInStock()" class="production-notice">
+                            <i class="fa-solid fa-info-circle"></i>
+                            This size is currently out of stock. Your order will be marked as "Pending Production" and processed once the item is reproduced.
+                        </small>
+                    </div>
+                    
+                    <!-- Pickup Date selection -->
+                    <div class="popup-pickup-section">
+                        <label class="popup-label"><strong>Select Pickup Date:</strong></label>
+                        <input 
+                            type="date" 
+                            [(ngModel)]="selectedPickupDate" 
+                            class="popup-date-select"
+                            [min]="minDate"
+                            [max]="maxDate"
+                            [disabled]="!isSizeInStock()"
+                        />
+                        <small *ngIf="!selectedPickupDate && isSizeInStock()" class="pickup-error">Pickup date is required</small>
+                        <small *ngIf="isSizeInStock()" class="pickup-info">The shop will open from 9am to 5pm only.</small>
+                        <small *ngIf="!isSizeInStock()" class="pickup-disabled-info">
+                            <i class="fa-solid fa-clock"></i>
+                            Pickup date will be determined after production is complete.
+                        </small>
+                    </div>
+                    
+                    <div class="popup-actions">
+                        <button class="popup-add-to-cart-btn"
+                            [disabled]="!selectedSize || (isSizeInStock() && !selectedPickupDate)"
+                            [class.disabled]="!selectedSize || (isSizeInStock() && !selectedPickupDate)"
+                            (click)="selectedProduct && selectedSize && addProductToCart(selectedProduct.id, 1, selectedSize, selectedPickupDate); closeModal()">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span *ngIf="isSizeInStock()">Add to Cart</span>
+                            <span *ngIf="!isSizeInStock()">Order for Production</span>
+                        </button>
+                        
+                        <button class="popup-buy-now-btn"
+                            [disabled]="!selectedSize || (isSizeInStock() && !selectedPickupDate)"
+                            [class.disabled]="!selectedSize || (isSizeInStock() && !selectedPickupDate)"
+                            (click)="selectedProduct && selectedSize && buyNow(selectedProduct.id, 1, selectedSize, selectedPickupDate)">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span *ngIf="isSizeInStock()">Buy Now</span>
+                            <span *ngIf="!isSizeInStock()">Order for Production</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- addToCart -->
+<div class="modal fade" id="addToCart" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="n-modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel">ADD TO CART</h2>
+                    <button class="close-icon-1" (click)="closeModal()" type="button" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="fa-solid fa-close"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Your modal content here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="del-btn" *ngIf="selectedProduct"
+                        (click)="addProductToCart(selectedProduct.id, 1)" data-bs-dismiss="modal">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- logout -->
+<div class="modal fade" id="logout" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="n-modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel">LOGOUT</h2>
+                    <button class="close-icon-1" (click)="closeModal()" type="button" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="fa-solid fa-close"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="del-btn" (click)="logout()" data-bs-dismiss="modal">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

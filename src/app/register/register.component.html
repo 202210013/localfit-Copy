@@ -1,0 +1,174 @@
+<div class="modern-register-container">
+    <!-- Background Elements -->
+    <div class="background-shapes">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        <div class="floating-shape shape-4"></div>
+        <div class="floating-shape shape-5"></div>
+    </div>
+
+    <!-- Animated Background Gradient -->
+    <div class="animated-bg"></div>
+
+    <!-- Register Card Container -->
+    <div class="register-card-container">
+    <!-- Register Card Container -->
+    <div class="register-card-container">
+        <div class="register-card">
+            <!-- Brand Logo/Header -->
+            <div class="register-header">
+                <div class="brand-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2 class="register-title">Join Us Today</h2>
+                <p class="register-subtitle">Create your new account</p>
+            </div>
+
+            <!-- Register Form -->
+            <form class="register-form" [formGroup]="registerForm" (ngSubmit)="register()">
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="fas fa-user input-icon"></i>
+                        <input 
+                            id="name" 
+                            formControlName="name" 
+                            type="text" 
+                            placeholder=" "
+                            class="form-input">
+                        <label for="name" class="form-label">Full Name</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input 
+                            id="email" 
+                            formControlName="email" 
+                            type="email" 
+                            placeholder=" "
+                            class="form-input">
+                        <label for="email" class="form-label">Email Address</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="fas fa-phone input-icon"></i>
+                        <input 
+                            id="cellphone" 
+                            formControlName="cellphone" 
+                            type="tel" 
+                            placeholder=" "
+                            class="form-input">
+                        <label for="cellphone" class="form-label">Cellphone Number</label>
+                    </div>
+                    <div class="field-hint" *ngIf="registerForm.get('cellphone')?.invalid && registerForm.get('cellphone')?.touched">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Please enter a valid Philippine mobile number (e.g., 09123456789 or +639123456789)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input 
+                            id="password" 
+                            formControlName="password" 
+                            [type]="showPassword ? 'text' : 'password'" 
+                            placeholder=" "
+                            class="form-input">
+                        <label for="password" class="form-label">Password</label>
+                        <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+                            <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Enhanced Password Strength Indicator -->
+                    <div class="password-strength-container" *ngIf="registerForm.get('password')?.value">
+                        <div class="password-strength-bar">
+                            <div class="strength-segment" 
+                                 [class.active]="passwordStrength >= 1"
+                                 [class.very-weak]="passwordStrength === 1"></div>
+                            <div class="strength-segment" 
+                                 [class.active]="passwordStrength >= 2"
+                                 [class.weak]="passwordStrength === 2"></div>
+                            <div class="strength-segment" 
+                                 [class.active]="passwordStrength >= 3"
+                                 [class.fair]="passwordStrength === 3"></div>
+                            <div class="strength-segment" 
+                                 [class.active]="passwordStrength >= 4"
+                                 [class.good]="passwordStrength === 4"></div>
+                            <div class="strength-segment" 
+                                 [class.active]="passwordStrength >= 5"
+                                 [class.strong]="passwordStrength >= 5"></div>
+                        </div>
+                        <div class="password-strength-text" 
+                             [ngClass]="{
+                               'very-weak-text': passwordStrength <= 1,
+                               'weak-text': passwordStrength === 2,
+                               'fair-text': passwordStrength === 3,
+                               'good-text': passwordStrength === 4,
+                               'strong-text': passwordStrength >= 5
+                             }">
+                            <i class="fas fa-shield-alt"></i>
+                            {{ passwordStrengthText }}
+                        </div>
+                        
+                        <!-- Password Requirements Notification -->
+                        <div class="password-requirements" *ngIf="registerForm.get('password')?.value && !isPasswordStrong()">
+                            <div class="requirement-message">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Password must be stronger to create account</span>
+                            </div>
+                            <div class="requirement-list">
+                                <div class="requirement-item" [class.met]="hasMinLength()">
+                                    <i class="fas" [class.fa-check]="hasMinLength()" [class.fa-times]="!hasMinLength()"></i>
+                                    At least 8 characters
+                                </div>
+                                <div class="requirement-item" [class.met]="hasLowercase()">
+                                    <i class="fas" [class.fa-check]="hasLowercase()" [class.fa-times]="!hasLowercase()"></i>
+                                    Lowercase letter
+                                </div>
+                                <div class="requirement-item" [class.met]="hasUppercase()">
+                                    <i class="fas" [class.fa-check]="hasUppercase()" [class.fa-times]="!hasUppercase()"></i>
+                                    Uppercase letter
+                                </div>
+                                <div class="requirement-item" [class.met]="hasNumber()">
+                                    <i class="fas" [class.fa-check]="hasNumber()" [class.fa-times]="!hasNumber()"></i>
+                                    Number
+                                </div>
+                                <div class="requirement-item" [class.met]="hasSpecialChar()">
+                                    <i class="fas" [class.fa-check]="hasSpecialChar()" [class.fa-times]="!hasSpecialChar()"></i>
+                                    Special character
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms-container">
+                    <input type="checkbox" id="terms" class="checkbox" required>
+                    <label for="terms" class="terms-label">
+                        I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="register-btn" [disabled]="isCreateButtonDisabled()" [class.disabled]="isCreateButtonDisabled()">
+                    <span>Create Account</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <button type="button" class="login-btn" (click)="goToLogin()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Already have an account? Sign In</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

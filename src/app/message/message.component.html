@@ -1,0 +1,260 @@
+<div class="modern-message-container">
+  <!-- Animated Background -->
+  <div class="animated-bg"></div>
+  <div class="background-shapes">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+    <div class="floating-shape shape-4"></div>
+    <div class="floating-shape shape-5"></div>
+  </div>
+
+  <!-- Modern Chat Wrapper -->
+  <div class="modern-chat-wrapper">
+    <!-- Mobile Header -->
+    <div class="mobile-header" *ngIf="isMobile">
+      <button class="modern-hamburger" (click)="sidebarOpen = !sidebarOpen">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <div class="mobile-brand">
+        <div class="mobile-brand-icon">
+          <i class="fa-solid fa-comments"></i>
+        </div>
+        <span class="mobile-brand-text">LOCALFIT Messages</span>
+      </div>
+      <div class="mobile-actions">
+        <button class="modern-icon-btn" (click)="goToProductListing()">
+          <i class="fa-solid fa-home"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modern Sidebar -->
+    <div class="modern-sidebar" [class.sidebar-open]="sidebarOpen || !isMobile">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="brand-section">
+          <div class="brand-icon">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <div class="brand-info">
+            <span class="brand-logo">LOCALFIT</span>
+            <span class="brand-subtitle">Messages</span>
+          </div>
+        </div>
+        <button class="close-sidebar-btn" (click)="sidebarOpen = false" *ngIf="isMobile">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="search-container">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search conversations..."
+            class="modern-search-input"
+          />
+          <button class="clear-search-btn" *ngIf="searchTerm" (click)="searchTerm = ''">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Users List -->
+      <div class="users-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <i class="fa-solid fa-users"></i>
+            Conversations
+            <span class="users-count">({{ filteredUsers().length }})</span>
+          </h3>
+        </div>
+        
+        <div class="users-list-container">
+          <ul class="modern-users-list">
+            <li
+              *ngFor="let user of filteredUsers()"
+              [class.active]="user.email === selectedRecipient?.email"
+              (click)="selectRecipient(user)"
+              class="user-item"
+              tabindex="0"
+              role="button"
+            >
+              <div class="user-avatar">
+                <div class="avatar-circle">
+                  <span class="avatar-text">{{ user.name.charAt(0).toUpperCase() }}</span>
+                  <div class="online-indicator"></div>
+                </div>
+              </div>
+              <div class="user-info">
+                <div class="user-details">
+                  <span class="user-name">{{ user.name }}</span>
+                  <span class="user-status">{{ user.email }}</span>
+                </div>
+                <div class="message-preview">
+                  <span class="last-message">{{ getLastMessageContent(user) }}</span>
+                  <span class="message-time">{{ getLastMessageTime(user) }}</span>
+                </div>
+              </div>
+              <div class="user-actions">
+                <i class="fa-solid fa-chevron-right action-arrow"></i>
+              </div>
+            </li>
+          </ul>
+          
+          <div class="empty-users" *ngIf="filteredUsers().length === 0">
+            <div class="empty-users-content">
+              <i class="fa-solid fa-user-slash"></i>
+              <span>No users found</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button class="back-home-btn" (click)="goToProductListing()">
+          <i class="fa-solid fa-home"></i>
+          <span>Back to Homepage</span>
+          <i class="fa-solid fa-external-link-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modern Chat Area -->
+    <div class="modern-chat-area">
+      <!-- Chat Header -->
+      <div class="chat-header" *ngIf="selectedRecipient">
+        <div class="chat-header-content">
+          <div class="recipient-info">
+            <div class="recipient-avatar">
+              <span class="avatar-text">{{ selectedRecipient.name.charAt(0).toUpperCase() }}</span>
+              <div class="online-indicator active"></div>
+            </div>
+            <div class="recipient-details">
+              <h3 class="recipient-name">{{ selectedRecipient.name }}</h3>
+              <p class="recipient-status">
+                <i class="fa-solid fa-circle status-dot"></i>
+                Active now
+              </p>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="chat-action-btn">
+              <i class="fa-solid fa-phone"></i>
+            </button>
+            <button class="chat-action-btn">
+              <i class="fa-solid fa-video"></i>
+            </button>
+            <button class="chat-action-btn">
+              <i class="fa-solid fa-ellipsis-v"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Container -->
+      <div class="messages-container" *ngIf="selectedRecipient; else noSelectedUser">
+        <div class="messages-wrapper">
+          <div
+            *ngFor="let message of filteredMessages()"
+            [ngClass]="{
+              'message-bubble': true,
+              'sent': message.sender === userName,
+              'received': message.sender !== userName
+            }"
+          >
+            <div class="message-content">
+              <span class="message-text">{{ message.content }}</span>
+              <div class="message-meta">
+                <span class="message-time">{{ formatMessageBubbleTime(message.timestamp) }}</span>
+                <i class="fa-solid fa-check-double delivery-status" *ngIf="message.sender === userName"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" *ngIf="false">
+          <div class="typing-avatar">
+            <span>{{ (selectedRecipient?.name || 'U').charAt(0).toUpperCase() }}</span>
+          </div>
+          <div class="typing-animation">
+            <div class="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No User Selected State -->
+      <ng-template #noSelectedUser>
+        <div class="no-chat-selected">
+          <div class="no-chat-content">
+            <div class="no-chat-icon">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+            <h3 class="no-chat-title">Welcome to LOCALFIT Messages</h3>
+            <p class="no-chat-message">Select a conversation from the sidebar to start messaging.</p>
+            <div class="no-chat-features">
+              <div class="feature-item">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Real-time messaging</span>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-shield-alt"></i>
+                <span>Secure conversations</span>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-mobile-alt"></i>
+                <span>Mobile-friendly</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Modern Message Input -->
+      <div class="modern-message-input" *ngIf="selectedRecipient">
+        <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="message-form">
+          <div class="input-container">
+            <button type="button" class="attachment-btn">
+              <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <input
+              formControlName="content"
+              type="text"
+              placeholder="Type your message..."
+              class="message-input"
+              [disabled]="!selectedRecipient"
+            />
+            <button type="button" class="emoji-btn">
+              <i class="fa-solid fa-smile"></i>
+            </button>
+            <button
+              type="submit"
+              [disabled]="messageForm.invalid || !selectedRecipient"
+              class="modern-send-btn"
+              [class.active]="messageForm.valid && selectedRecipient"
+            >
+              <i class="fa-solid fa-paper-plane"></i>
+              <span class="send-text">Send</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" 
+         [class.active]="sidebarOpen && isMobile" 
+         (click)="sidebarOpen = false"></div>
+  </div>
+</div>

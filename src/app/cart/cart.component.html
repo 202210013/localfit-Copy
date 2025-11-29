@@ -1,0 +1,363 @@
+<div class="modern-cart-container">
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    <div class="background-shapes">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        <div class="floating-shape shape-4"></div>
+        <div class="floating-shape shape-5"></div>
+    </div>
+
+    <div class="cart-content-wrapper">
+        <!-- Modern Header -->
+        <div class="modern-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="brand-section">
+                        <div class="brand-icon">
+                            <i class="fa-solid fa-shopping-cart"></i>
+                        </div>
+                        <div class="brand-info">
+                            <span class="brand-logo">LOCALFIT</span>
+                            <span class="page-title">{{ isOrderSummaryMode ? 'Order Summary' : 'Shopping Cart' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="modern-icon-btn messages-btn" (click)="goToMessege()">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span class="btn-tooltip">Messages</span>
+                    </button>
+                    <button class="modern-icon-btn shop-btn" (click)="goToProductListing()">
+                        <i class="fa-solid fa-shop"></i>
+                        <span class="btn-tooltip">Shop</span>
+                    </button>
+                    <button class="modern-icon-btn logout-btn" (click)="logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span class="btn-tooltip">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Cart Items Section -->
+        <div class="cart-items-section">
+            <div *ngIf="carts && carts.length > 0; else emptyCart" class="cart-items-container">
+                <!-- Cart Items Header -->
+                <div class="cart-items-header">
+                    <h2 class="section-title">
+                        <i class="fa-solid fa-shopping-bag"></i>
+                        {{ isOrderSummaryMode ? 'Order Details' : 'Your Cart Items' }}
+                        <span class="items-count">({{ carts.length }} items)</span>
+                    </h2>
+                    <div *ngIf="isOrderSummaryMode" class="order-summary-note">
+                        <i class="fa-solid fa-info-circle"></i>
+                        Review your order details below and proceed to checkout
+                    </div>
+                </div>
+
+                <!-- Cart Items List -->
+                <div class="cart-items-list">
+                    <div class="cart-item-card" *ngFor="let cart of carts">
+                        <div class="item-selection">
+                            <div class="modern-checkbox">
+                                <input type="checkbox" [id]="'cart-' + cart.id" [(ngModel)]="cart.selected" (change)="updateSelectedCarts(cart)" />
+                                <label [for]="'cart-' + cart.id" class="checkbox-label">
+                                    <span class="checkmark">
+                                        <i class="fa-solid fa-check"></i>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="item-image">
+                            <div class="image-container">
+                                <img [src]="getImageUrl(cart.image)" class="product-image" [alt]="cart.name" loading="lazy">
+                                <div class="image-overlay">
+                                    <i class="fa-solid fa-eye"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item-details">
+                            <div class="product-info">
+                                <h3 class="product-name">{{ cart.name }}</h3>
+                                <p class="product-size" *ngIf="cart.size">
+                                    <i class="fa-solid fa-tag"></i>
+                                    Size: {{ cart.size }}
+                                </p>
+                            </div>
+
+                            <div class="price-section">
+                                <div class="unit-price">
+                                    <span class="price-label">Unit Price</span>
+                                    <span class="price-value">₱{{ cart.price }}</span>
+                                </div>
+                            </div>
+
+                            <div class="quantity-section">
+                                <span class="quantity-label">Quantity</span>
+                                <div class="quantity-controls">
+                                    <button class="qty-btn minus" (click)="cart.quantity > 1 && (cart.quantity = cart.quantity - 1) && updateCart(cart)" [disabled]="cart.quantity <= 1">
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="quantity-input" [(ngModel)]="cart.quantity" (change)="updateCart(cart)" min="1" max="99" />
+                                    <button class="qty-btn plus" (click)="cart.quantity = cart.quantity + 1; updateCart(cart)">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="subtotal-section">
+                                <span class="subtotal-label">Subtotal</span>
+                                <span class="subtotal-value">₱{{ (cart.price * cart.quantity).toFixed(2) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="item-actions">
+                            <button class="delete-item-btn" (click)="confirmDeleteCart(cart.id)" [title]="'Remove ' + cart.name">
+                                <i class="fa-solid fa-trash-alt"></i>
+                                <span class="btn-text">Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Cart State -->
+            <ng-template #emptyCart>
+                <div class="empty-cart-container">
+                    <div class="empty-cart-content">
+                        <div class="empty-cart-icon">
+                            <i class="fa-solid fa-shopping-cart"></i>
+                        </div>
+                        <h3 class="empty-cart-title">Your cart is empty</h3>
+                        <p class="empty-cart-message">Looks like you haven't added any items to your cart yet.</p>
+                        <button class="start-shopping-btn" (click)="goToProductListing()">
+                            <i class="fa-solid fa-shop"></i>
+                            Start Shopping
+                        </button>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+        <!-- Modern Cart Summary Footer -->
+        <div class="modern-cart-footer" *ngIf="carts && carts.length > 0">
+            <div class="footer-content">
+                <div class="select-all-section">
+                    <div class="modern-checkbox select-all-checkbox">
+                        <input type="checkbox" id="select-all" [(ngModel)]="selectAll" (change)="selectAllCarts($event)" />
+                        <label for="select-all" class="checkbox-label">
+                            <span class="checkmark">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+                            <span class="checkbox-text">Select All Items</span>
+                        </label>
+                    </div>
+                    <div class="selected-items-info">
+                        <span class="selected-count">{{ selectedCarts.length }} of {{ carts.length }} selected</span>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="price-breakdown">
+                        <div class="price-row total-items">
+                            <span class="label">Total Items ({{ carts.length }}):</span>
+                            <span class="value">₱{{ calculateTotal().toFixed(2) }}</span>
+                        </div>
+                        <div class="price-row selected-items" *ngIf="selectedCarts.length > 0">
+                            <span class="label">Selected Items ({{ selectedCarts.length }}):</span>
+                            <span class="value highlight">₱{{ calculateSelectedTotal().toFixed(2) }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="checkout-actions">
+                        <button *ngIf="isOrderSummaryMode" class="continue-shopping-btn" 
+                                (click)="continueShopping()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span class="btn-text">Continue Shopping</span>
+                        </button>
+                        
+                        <button class="checkout-btn" 
+                                [disabled]="selectedCarts.length === 0 || isCheckoutLoading"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#summaryModal"
+                                [class.disabled]="selectedCarts.length === 0 || isCheckoutLoading"
+                                [class.loading]="isCheckoutLoading">
+                            <div class="btn-content">
+                                <i class="fa-solid fa-spinner fa-spin" *ngIf="isCheckoutLoading"></i>
+                                <i class="fa-solid fa-credit-card" *ngIf="!isCheckoutLoading"></i>
+                                <span class="btn-text">
+                                    {{ isCheckoutLoading ? 'Processing...' : (isOrderSummaryMode ? 'Confirm Order' : 'Proceed to Checkout') }}
+                                </span>
+                                <span class="amount" *ngIf="selectedCarts.length > 0 && !isCheckoutLoading">₱{{ calculateSelectedTotal().toFixed(2) }}</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modern Delete Confirmation Modal -->
+<div class="modal fade" id="deleteCart" tabindex="-1" aria-labelledby="deleteCartLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <div class="modal-icon delete-icon">
+                    <i class="fa-solid fa-trash-alt"></i>
+                </div>
+                <div class="modal-title-section">
+                    <h5 class="modal-title" id="deleteCartLabel">Remove Item</h5>
+                    <p class="modal-subtitle">Are you sure you want to remove this item from your cart?</p>
+                </div>
+                <button type="button" class="btn-close modern-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <p>This action cannot be undone. The item will be permanently removed from your shopping cart.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn modern-btn secondary-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Keep Item
+                </button>
+                <button type="button" class="btn modern-btn danger-btn" (click)="deleteCart(selectedCartId)" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-trash-alt"></i>
+                    Remove Item
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Logout Modal -->
+<div class="modal fade" id="logout" tabindex="-1" aria-labelledby="logoutLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <div class="modal-icon logout-icon">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                </div>
+                <div class="modal-title-section">
+                    <h5 class="modal-title" id="logoutLabel">Sign Out</h5>
+                    <p class="modal-subtitle">Are you sure you want to sign out of your account?</p>
+                </div>
+                <button type="button" class="btn-close modern-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <p>You will be redirected to the login page and your session will be ended.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn modern-btn secondary-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Stay Signed In
+                </button>
+                <button type="button" class="btn modern-btn danger-btn" (click)="logout()" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Checkout Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal checkout-modal">
+            <div class="modal-header">
+                <div class="modal-icon checkout-icon">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="modal-title-section">
+                    <h5 class="modal-title" id="summaryModalLabel">Order Summary</h5>
+                    <p class="modal-subtitle">Review your selected items before checkout</p>
+                </div>
+                <button type="button" class="btn-close modern-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="checkout-summary">
+                    <div class="summary-table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Size</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let cart of selectedCarts" class="summary-row">
+                                    <td class="product-cell">
+                                        <div class="product-summary">
+                                            <img [src]="getImageUrl(cart.image)" [alt]="cart.name" class="summary-image">
+                                            <span class="product-name">{{ cart.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="size-cell">
+                                        <span class="size-badge" *ngIf="cart.size; else noSize">{{ cart.size }}</span>
+                                        <ng-template #noSize>
+                                            <span class="no-size">Standard</span>
+                                        </ng-template>
+                                    </td>
+                                    <td class="quantity-cell">
+                                        <span class="quantity-badge">{{ cart.quantity }}</span>
+                                    </td>
+                                    <td class="price-cell">₱{{ cart.price }}</td>
+                                    <td class="total-cell">₱{{ (cart.price * cart.quantity).toFixed(2) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="order-total-section">
+                        <div class="total-breakdown">
+                            <div class="total-row subtotal">
+                                <span class="label">Subtotal ({{ selectedCarts.length }} items)</span>
+                                <span class="value">₱{{ calculateSelectedTotal().toFixed(2) }}</span>
+                            </div>
+                            <div class="total-row final-total">
+                                <span class="label">Total Amount</span>
+                                <span class="value">₱{{ calculateSelectedTotal().toFixed(2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn modern-btn secondary-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Continue Shopping
+                </button>
+                <button type="button" class="btn modern-btn primary-btn checkout-final" 
+                        (click)="checkout()" 
+                        data-bs-dismiss="modal"
+                        [disabled]="isCheckoutLoading"
+                        [class.loading]="isCheckoutLoading">
+                    <div class="btn-content">
+                        <i class="fa-solid fa-spinner fa-spin" *ngIf="isCheckoutLoading"></i>
+                        <i class="fa-solid fa-credit-card" *ngIf="!isCheckoutLoading"></i>
+                        <span class="btn-text">
+                            {{ isCheckoutLoading ? 'Processing Order...' : 'Complete Checkout' }}
+                        </span>
+                        <span class="checkout-amount" *ngIf="!isCheckoutLoading">₱{{ calculateSelectedTotal().toFixed(2) }}</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

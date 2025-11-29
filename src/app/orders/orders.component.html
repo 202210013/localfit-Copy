@@ -1,0 +1,143 @@
+<div class="orders-container">
+  <div class="orders-wrapper">
+    
+    <!-- Header -->
+    <div class="orders-header">
+      <button class="back-btn" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back
+      </button>
+      <h1>My Orders</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'pending'"
+        (click)="switchTab('pending')">
+        <i class="fa-solid fa-clock"></i>
+        Pending
+        <span class="tab-counter" *ngIf="pendingOrders.length > 0">{{ pendingOrders.length }}</span>
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'ready-for-pickup'"
+        (click)="switchTab('ready-for-pickup')">
+        <i class="fa-solid fa-box-open"></i>
+        Ready for Pickup
+        <span class="tab-counter" *ngIf="readyForPickupOrders.length > 0">{{ readyForPickupOrders.length }}</span>
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'declined'"
+        (click)="switchTab('declined')">
+        <i class="fa-solid fa-times-circle"></i>
+        Declined
+        <span class="tab-counter" *ngIf="declinedOrders.length > 0">{{ declinedOrders.length }}</span>
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'completed'"
+        (click)="switchTab('completed')">
+        <i class="fa-solid fa-check-circle"></i>
+        Completed
+        <span class="tab-counter" *ngIf="completedOrders.length > 0">{{ completedOrders.length }}</span>
+      </button>
+    </div>
+
+    <!-- Sort Controls -->
+    <div class="sort-controls" *ngIf="!loading && getCurrentOrders().length > 0">
+      <div class="sort-wrapper">
+        <label for="sort-select">
+          <i class="fa-solid fa-sort"></i>
+          Sort by:
+        </label>
+        <select id="sort-select" [value]="sortBy" (change)="onSortChange($event)" class="sort-select">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading orders...</p>
+    </div>
+
+    <!-- Orders Content - Unified for all tabs -->
+    <div *ngIf="!loading" class="orders-content">
+      <div *ngIf="getCurrentOrders().length === 0" class="no-orders">
+        <i class="fa-solid" [ngClass]="{
+          'fa-clock': activeTab === 'pending',
+          'fa-box-open': activeTab === 'ready-for-pickup', 
+          'fa-times-circle': activeTab === 'declined',
+          'fa-check-circle': activeTab === 'completed'
+        }"></i>
+        <h3>No {{ activeTab === 'ready-for-pickup' ? 'ready for pickup' : activeTab }} orders</h3>
+        <p>{{ getEmptyStateMessage() }}</p>
+      </div>
+
+      <div *ngIf="getCurrentOrders().length > 0" class="orders-list">
+        <div *ngFor="let order of getCurrentOrders()" class="order-card">
+          <div class="order-header">
+            <div class="order-info">
+              <h3>Order #{{ order.id }}</h3>
+              <span class="order-date">{{ formatDate(order.created_at || order.order_date || '') }}</span>
+            </div>
+            <div class="order-status">
+              <span [class]="getStatusClass(order.status)">
+                {{ order.status === 'ready-for-pickup' ? 'Ready for Pickup' : (order.status | titlecase) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-body">
+            <div class="product-info">
+              <img [src]="getImageUrl(order.product_image || '')" alt="Product" class="product-image">
+              <div class="product-details">
+                <h4>{{ getProductName(order) }}</h4>
+                <p class="buyer-info" *ngIf="order.customer">
+                  <i class="fa-solid fa-user"></i>
+                  Customer: {{ getBuyerName(order) }}
+                </p>
+                <p class="quantity">Quantity: {{ order.quantity }}</p>
+                <!-- Show pickup date for ready-for-pickup orders -->
+                <p class="pickup-date-info" *ngIf="order.status === 'ready-for-pickup' && order.pickup_date">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  Pickup Date: <strong>{{ formatPickupDate(order.pickup_date) }}</strong>
+                </p>
+                <!-- Show decline reason for declined orders -->
+                <p class="decline-reason" *ngIf="order.status === 'declined' && order.remarks">
+                  <i class="fa-solid fa-info-circle"></i>
+                  Reason: {{ order.remarks }}
+                </p>
+              </div>
+            </div>
+            <div class="order-actions">
+              <div class="order-total">
+                <h3>₱ {{ getTotalPrice(order) }}</h3>
+              </div>
+              <!-- Rating button for completed orders -->
+              <button 
+                *ngIf="activeTab === 'completed'" 
+                class="rate-btn" 
+                [class.rated]="order.hasRating"
+                [disabled]="order.hasRating"
+                (click)="rateOrder(order)"
+                [title]="order.hasRating ? 'Already rated' : 'Rate this order'">
+                <i class="fa-solid" [class.fa-star]="!order.hasRating" [class.fa-check]="order.hasRating"></i>
+                {{ order.hasRating ? 'Rated' : 'Rate Order' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+

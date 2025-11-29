@@ -1,0 +1,6 @@
+<!-- Default Avatar SVG -->
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="60" fill="#f0f4ff"/>
+  <circle cx="60" cy="45" r="15" fill="#667eea"/>
+  <path d="M30 90c0-16.569 13.431-30 30-30s30 13.431 30 30v5H30v-5z" fill="#667eea"/>
+</svg>

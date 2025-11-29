@@ -1,0 +1,21 @@
+{
+  "name": "LocalFit",
+  "short_name": "LocalFit",
+  "theme_color": "#cc0000",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "assets/icons/icons.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icons.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

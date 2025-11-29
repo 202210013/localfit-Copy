@@ -1,0 +1,1152 @@
+<div class="admin-container">
+  <!-- Mobile Menu Toggle -->
+  <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  
+  <!-- Mobile Backdrop -->
+  <div class="mobile-backdrop" [class.show]="mobileMenuOpen" (click)="closeMobileMenu()"></div>
+  
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen">
+    <div class="sidebar-header">
+      <h2 class="dashboard-title">Admin Dashboard</h2>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <button 
+        [class.active]="currentView === 'analytics'" 
+        (click)="switchToAnalytics()"
+        class="nav-btn">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+      </button>
+      <button 
+        [class.active]="currentView === 'orders'" 
+        (click)="switchToOrders()"
+        class="nav-btn">
+        <i class="fa-solid fa-list"></i>
+        <span>Orders</span>
+      </button>
+      <button 
+        [class.active]="currentView === 'report'" 
+        (click)="switchToReport()"
+        class="nav-btn">
+        <i class="fa-solid fa-file-lines"></i>
+        <span>Sales Report</span>
+      </button>
+      <button 
+        [class.active]="currentView === 'ratings'" 
+        (click)="showRatings()"
+        class="nav-btn">
+        <i class="fa-solid fa-star"></i>
+        <span>Ratings</span>
+      </button>
+      <button 
+        [class.active]="currentView === 'messages'" 
+        (click)="switchToMessages()"
+        class="nav-btn">
+        <i class="fa-solid fa-message"></i>
+        <span>Messages</span>
+      </button>
+      <button 
+        [class.active]="currentView === 'inventory'" 
+        (click)="switchToInventory()"
+        class="nav-btn">
+        <i class="fa-solid fa-warehouse"></i>
+        <span>Inventory</span>
+      </button>
+      <button 
+        (click)="switchToProducts()"
+        class="nav-btn">
+        <i class="fa-solid fa-box"></i>
+        <span>My Products</span>
+      </button>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <i class="fa-solid fa-sign-out"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+
+ <!-- Time Period Filter -->
+  <div class="date-filter-section" *ngIf="currentView === 'analytics'">
+    <div class="date-filter">
+      <label>Time Period:</label>
+      <select [(ngModel)]="dateFilter" (ngModelChange)="onDateFilterChange(dateFilter)" class="date-select">
+        <option value="today">Today</option>
+        <option value="week">Last 7 Days</option>
+        <option value="month">Last Month</option>
+        <option value="year">Last Year</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+  </div>
+  <!-- Analytics View -->
+  <div *ngIf="currentView === 'analytics'" class="analytics-section">
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card revenue">
+        <div class="metric-icon">
+          <i class="fa-solid fa-peso-sign"></i>
+        </div>
+        <div class="metric-content">
+          <h3>Total Revenue</h3>
+          <p class="metric-value">₱{{ analytics.totalRevenue | number:'1.2-2' }}</p>
+        </div>
+      </div>
+      
+      <div class="metric-card orders">
+        <div class="metric-icon">
+          <i class="fa-solid fa-shopping-cart"></i>
+        </div>
+        <div class="metric-content">
+          <h3>Completed Orders</h3>
+          <p class="metric-value">{{ analytics.completedOrders }}</p>
+        </div>
+      </div>
+      
+      <div class="metric-card approved">
+        <div class="metric-icon">
+          <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <div class="metric-content">
+          <h3>Approved Orders</h3>
+          <p class="metric-value">{{ analytics.approvedOrders }}</p>
+        </div>
+      </div>
+      
+      <div class="metric-card average">
+        <div class="metric-icon">
+          <i class="fa-solid fa-calculator"></i>
+        </div>
+        <div class="metric-content">
+          <h3>Avg Order Value</h3>
+          <p class="metric-value">₱{{ analytics.averageOrderValue | number:'1.2-2' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Charts Section -->
+    <div class="analytics-grid">
+      <!-- Combined Top Products & Size Analytics -->
+      <div class="analytics-card combined-analytics">
+        <div class="combined-header">
+          <h3><i class="fa-solid fa-trophy"></i> Top Products</h3>
+        </div>
+
+        <!-- Combined View Only -->
+        <div class="combined-content">
+          <div class="section-title">
+            <h4><i class="fa-solid fa-table"></i> Product Sales Summary</h4>
+            <span class="section-subtitle">Top products with their most sold size</span>
+          </div>
+          
+          <div class="products-table-container">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Product Name</th>
+                  <th>Size</th>
+                  <th>Total Qty</th>
+                  <th>Total Sales</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let product of getTopProductsWithSizes(); let i = index">
+                  <tr *ngFor="let size of product.sizes; let sizeIndex = index">
+                    <td class="rank-cell">
+                      <div class="rank-badge">{{ i + 1 }}</div>
+                    </td>
+                    <td class="product-name-cell">
+                      <div class="product-name">{{ product.name }}</div>
+                      <div class="product-summary">
+                        <span class="total-summary">{{ product.totalQuantity }} total units</span>
+                      </div>
+                    </td>
+                    <td class="size-cell">
+                      <span class="size-badge most-sold">{{ size.size }}</span>
+                      <span class="most-sold-label">Most Sold</span>
+                    </td>
+                    <td class="qty-cell">{{ size.quantity }}</td>
+                    <td class="sales-cell">₱{{ size.revenue | number:'1.2-2' }}</td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+            
+            <div *ngIf="getTopProductsWithSizes().length === 0" class="no-data">
+              No product data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Professional Sales Report View -->
+  <div *ngIf="currentView === 'report'" class="report-section">
+    <!-- Report Header -->
+    <div class="report-header">
+      <div class="report-title">
+        <h2><i class="fa-solid fa-file-contract"></i>Sales Report</h2>
+        <p class="report-subtitle">Comprehensive Business Performance Analysis</p>
+      </div>
+      <div class="report-actions">
+        <div class="report-period">
+          <div class="date-range-container">
+            <div class="date-input-group">
+              <label>Report Period From:</label>
+              <input 
+                type="date" 
+                [(ngModel)]="reportStartDate" 
+                (ngModelChange)="onDateRangeChange()"
+                class="date-input">
+            </div>
+            <div class="date-input-group">
+              <label>To:</label>
+              <input 
+                type="date" 
+                [(ngModel)]="reportEndDate" 
+                (ngModelChange)="onDateRangeChange()"
+                class="date-input">
+            </div>
+            <button (click)="applyDateRange()" class="apply-date-btn">
+              <i class="fa-solid fa-calendar-check"></i> Apply
+            </button>
+          </div>
+        </div>
+        <button (click)="exportProfessionalReport()" class="export-report-btn">
+          <i class="fa-solid fa-file-export"></i> Export Report
+        </button>
+        <button (click)="generateProfessionalReport()" class="refresh-report-btn">
+          <i class="fa-solid fa-refresh"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="executive-summary">
+      <h3><i class="fa-solid fa-star"></i> Executive Summary</h3>
+      
+      <!-- Date Range Indicator -->
+      <div class="date-range-indicator" *ngIf="reportStartDate && reportEndDate">
+        <i class="fa-solid fa-calendar-days"></i>
+        <strong>Report Period:</strong> {{ reportStartDate | date:'MMM d, yyyy' }} - {{ reportEndDate | date:'MMM d, yyyy' }}
+      </div>
+      
+      <div class="summary-overview">
+        <div class="summary-metrics">
+          <div class="metric-item">
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value">₱{{ report.executiveSummary.totalRevenue | number:'1.2-2' }}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Completed Orders</div>
+            <div class="metric-value">{{ report.executiveSummary.totalOrders }}</div>
+          </div>
+
+        </div>
+        
+        <div class="report-metadata">
+          <p><strong>Generated:</strong> {{ report.generatedDate }}</p>
+          <p><strong>Period:</strong> {{ report.reportPeriod }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Completed Orders Table -->
+    <div class="completed-orders-section">
+      <h3>
+        <i class="fa-solid fa-check-double"></i> Completed Orders 
+        <span class="orders-count">({{ getCompletedOrders().length }} orders)</span>
+      </h3>
+      
+      <div class="orders-table-container">
+        <table class="completed-orders-table">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Product Name</th>
+              <th>Size</th>
+              <th>Price</th>
+              <th>OR Number</th>
+              <th>Date Completed</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of getCompletedOrders(); let i = index" class="order-row">
+              <td class="order-id">
+                <span class="id-badge">#{{ order.id }}</span>
+              </td>
+              <td class="product-name">
+                <i class="fa-solid fa-box"></i>
+                {{ order.product }}
+              </td>
+              <td class="size">
+                <span class="size-badge" *ngIf="order.size">{{ order.size }}</span>
+                <span class="no-size" *ngIf="!order.size">N/A</span>
+              </td>
+              <td class="price">
+                <span class="price-value">₱{{ getProductPrice(order.product) | number:'1.2-2' }}</span>
+              </td>
+              <td class="or-number">
+                <span class="or-badge" *ngIf="order.or_number">{{ order.or_number }}</span>
+                <span class="no-or" *ngIf="!order.or_number">N/A</span>
+              </td>
+              <td class="completion-date">
+                <i class="fa-solid fa-calendar-check"></i>
+                {{ getOrderDate(order) }}
+              </td>
+              <td class="action">
+                <button class="view-details-btn" (click)="viewOrderDetails(order)">
+                  <i class="fa-solid fa-eye"></i>
+                  View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div *ngIf="getCompletedOrders().length === 0" class="no-completed-orders">
+          <i class="fa-solid fa-info-circle"></i>
+          <h4>No Completed Orders</h4>
+          <p *ngIf="reportStartDate && reportEndDate">
+            No completed orders found between {{ reportStartDate | date:'MMM d, yyyy' }} and {{ reportEndDate | date:'MMM d, yyyy' }}.
+          </p>
+          <p *ngIf="!reportStartDate || !reportEndDate">
+            No completed orders found for the selected period.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders View -->
+  <div *ngIf="currentView === 'orders'" class="orders-section">
+    <div class="orders-header">
+      <h3><i class="fa-solid fa-list-check"></i> Order Management</h3>
+      <div class="order-stats">
+        <div class="stat-badge all" [class.active]="statusFilter === 'all'" (click)="filterByStatus('all')">
+          <span class="stat-count">{{ getStatusCount('all') }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-badge pending-production" [class.active]="statusFilter === 'pending-production'" (click)="filterByStatus('pending-production')">
+          <span class="stat-count">{{ getStatusCount('pending-production') }}</span>
+          <span class="stat-label">Pending Production</span>
+        </div>
+        <div class="stat-badge pending" [class.active]="statusFilter === 'pending'" (click)="filterByStatus('pending')">
+          <span class="stat-count">{{ getStatusCount('pending') }}</span>
+          <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-badge declined" [class.active]="statusFilter === 'declined'" (click)="filterByStatus('declined')">
+          <span class="stat-count">{{ getStatusCount('declined') }}</span>
+          <span class="stat-label">Declined</span>
+        </div>
+        <div class="stat-badge ready-pickup" [class.active]="statusFilter === 'ready-for-pickup'" (click)="filterByStatus('ready-for-pickup')">
+          <span class="stat-count">{{ getStatusCount('ready-for-pickup') }}</span>
+          <span class="stat-label">Ready for Pickup</span>
+        </div>
+        <div class="stat-badge completed" [class.active]="statusFilter === 'completed'" (click)="filterByStatus('completed')">
+          <span class="stat-count">{{ getStatusCount('completed') }}</span>
+          <span class="stat-label">Completed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filter Controls -->
+    <div class="order-controls">
+      <div class="search-container">
+        <i class="fa-solid fa-search search-icon"></i>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (input)="searchOrders(searchTerm)"
+          placeholder="Search orders by ID, customer, product, size..."
+          class="search-input">
+        <button *ngIf="searchTerm" (click)="searchTerm=''; searchOrders('')" class="clear-search">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <div class="size-filter-container">
+        <i class="fa-solid fa-ruler-combined size-filter-icon"></i>
+        <select [(ngModel)]="sizeFilter" (ngModelChange)="filterBySize(sizeFilter)" class="size-filter">
+          <option value="all">All Sizes</option>
+          <option *ngFor="let size of getAvailableSizes()" [value]="size">{{ size }}</option>
+        </select>
+      </div>
+      
+      <div class="filter-controls">
+        <select [(ngModel)]="statusFilter" (ngModelChange)="filterByStatus(statusFilter)" class="status-filter">
+          <option value="all">All Status</option>
+          <option value="pending-production">Pending Production Only</option>
+          <option value="pending">Pending Only</option>
+          <option value="approved">Approved Only</option>
+          <option value="declined">Declined Only</option>
+          <option value="ready-for-pickup">Ready for Pickup Only</option>
+          <option value="completed">Completed Only</option>
+        </select>
+        
+        <button (click)="clearFilters()" class="clear-filters-btn" [disabled]="searchTerm === '' && statusFilter === 'all' && sizeFilter === 'all' && sortField === 'id'">
+          <i class="fa-solid fa-filter-circle-xmark"></i> Clear Filters
+        </button>
+        
+        <button (click)="exportOrderManagementReport()" class="export-report-btn" title="Generate Order Management Report">
+          <i class="fa-solid fa-file-excel"></i> Generate Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info" *ngIf="filteredOrders.length !== customerOrders.length || searchTerm || statusFilter !== 'all' || sizeFilter !== 'all'">
+      <i class="fa-solid fa-info-circle"></i>
+      Showing {{ filteredOrders.length }} of {{ customerOrders.length }} orders
+      <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
+      <span *ngIf="statusFilter !== 'all'"> with status "{{ statusFilter }}"</span>
+      <span *ngIf="sizeFilter !== 'all'"> with size "{{ sizeFilter }}"</span>
+    </div>
+
+    <div class="table-container">
+      <table class="sortable-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="sortOrders('id')" [class.active]="sortField === 'id'">
+              Order #
+              <i class="fa-solid" [ngClass]="getSortIcon('id')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('customer')" [class.active]="sortField === 'customer'">
+              Customer
+              <i class="fa-solid" [ngClass]="getSortIcon('customer')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('product')" [class.active]="sortField === 'product'">
+              Product
+              <i class="fa-solid" [ngClass]="getSortIcon('product')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('quantity')" [class.active]="sortField === 'quantity'">
+              Quantity
+              <i class="fa-solid" [ngClass]="getSortIcon('quantity')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('size')" [class.active]="sortField === 'size'">
+              Size
+              <i class="fa-solid" [ngClass]="getSortIcon('size')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('status')" [class.active]="sortField === 'status'">
+              Status
+              <i class="fa-solid" [ngClass]="getSortIcon('status')"></i>
+            </th>
+            <th class="sortable" (click)="sortOrders('pickup_date')" [class.active]="sortField === 'pickup_date'">
+              Pickup Date
+              <i class="fa-solid" [ngClass]="getSortIcon('pickup_date')"></i>
+            </th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of filteredOrders; trackBy: trackByOrderId" class="order-row">
+            <td data-label="Order #" class="order-id">
+              <span class="id-badge">{{ order.id }}</span>
+            </td>
+            <td data-label="Customer" class="customer-name">
+              <i class="fa-solid fa-user"></i>
+              {{ order.customer_name || order.customer }}
+            </td>
+            <td data-label="Product" class="product-name">
+              <i class="fa-solid fa-box"></i>
+              {{ order.product }}
+            </td>
+            <td data-label="Quantity" class="quantity">
+              <span class="qty-badge">{{ order.quantity }}</span>
+            </td>
+            <td data-label="Size" class="size">
+              <span class="size-badge" *ngIf="order.size">{{ order.size }}</span>
+              <span class="no-size" *ngIf="!order.size">N/A</span>
+            </td>
+            <td data-label="Status" class="status">
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">
+                <i class="fa-solid" [ngClass]="{
+                  'fa-clock': order.status === 'pending',
+                  'fa-check-circle': order.status === 'approved', 
+                  'fa-times-circle': order.status === 'declined',
+                  'fa-box-open': order.status === 'ready-for-pickup',
+                  'fa-check-double': order.status === 'completed'
+                }"></i>
+                {{ order.status === 'ready-for-pickup' ? 'Ready for Pickup' : (order.status | titlecase) }}
+              </span>
+            </td>
+            <td data-label="Pickup Date" class="pickup-date">
+              <!-- Show pickup date only for pending orders -->
+              <span *ngIf="order.pickup_date && order.status === 'pending'" class="date-badge">
+                <i class="fa-solid fa-calendar"></i>
+                {{ order.pickup_date | date:'MMM d, yyyy' }}
+              </span>
+              <!-- Show dash for pending orders without pickup date -->
+              <span *ngIf="!order.pickup_date && order.status === 'pending'" class="no-date">—</span>
+              <!-- Hide pickup date for completed orders -->
+              <span *ngIf="order.status === 'completed'" class="completed-note">
+                <i class="fa-solid fa-check-double"></i>
+                Completed
+              </span>
+              <!-- Show pickup date for other statuses (ready-for-pickup, approved, declined) -->
+              <span *ngIf="order.pickup_date && order.status !== 'pending' && order.status !== 'completed'" class="date-badge">
+                <i class="fa-solid fa-calendar"></i>
+                {{ order.pickup_date | date:'MMM d, yyyy' }}
+              </span>
+              <span *ngIf="!order.pickup_date && order.status !== 'pending' && order.status !== 'completed'" class="no-date">—</span>
+            </td>
+            <td data-label="Action" class="actions">
+              <div class="action-buttons">
+                <button 
+                  (click)="viewOrderDetails(order)"
+                  class="view-details-btn"
+                  title="View Order Details">
+                  <i class="fa-solid fa-eye"></i>
+                  <span>Details</span>
+                </button>
+                
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div *ngIf="filteredOrders.length === 0 && customerOrders.length === 0" class="no-orders">
+        <i class="fa-solid fa-inbox"></i>
+        <h4>No Orders Found</h4>
+        <p>No orders found for your products. Orders will appear here once customers place them.</p>
+      </div>
+
+      <div *ngIf="filteredOrders.length === 0 && customerOrders.length > 0" class="no-results">
+        <i class="fa-solid fa-search"></i>
+        <h4>No Results Found</h4>
+        <p>No orders match your current search and filter criteria.</p>
+        <button (click)="clearFilters()" class="clear-btn">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ratings View -->
+  <div *ngIf="currentView === 'ratings'" class="ratings-section">
+    <div class="ratings-header">
+      <h3><i class="fa-solid fa-star"></i> Customer Ratings & Reviews</h3>
+      
+      <!-- Rating Statistics Summary -->
+      <div class="rating-summary-cards" *ngIf="ratings.length > 0">
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div class="summary-content">
+            <p class="summary-label">Average Rating</p>
+            <p class="summary-value">{{ getAverageRating() | number:'1.1-1' }} ⭐</p>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <div class="summary-content">
+            <p class="summary-label">Total Reviews</p>
+            <p class="summary-value">{{ ratings.length }}</p>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fa-solid fa-heart"></i>
+          </div>
+          <div class="summary-content">
+            <p class="summary-label">5-Star Ratings</p>
+            <p class="summary-value">{{ getRatingDistribution()[5] }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="ratings-controls" *ngIf="ratings.length > 0">
+      <div class="search-box">
+        <i class="fa-solid fa-search"></i>
+        <input 
+          type="text" 
+          [(ngModel)]="ratingSearchTerm" 
+          (input)="applyRatingFilters()"
+          placeholder="Search by customer, product, or review..."
+          class="search-input">
+        <button *ngIf="ratingSearchTerm" (click)="ratingSearchTerm=''; applyRatingFilters()" class="clear-search">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="filter-group">
+        <label for="ratingFilter">Filter by Rating:</label>
+        <select id="ratingFilter" [(ngModel)]="ratingFilterRating" (change)="applyRatingFilters()" class="filter-select">
+          <option value="all">All Ratings</option>
+          <option value="5">5 Stars ⭐⭐⭐⭐⭐</option>
+          <option value="4">4 Stars ⭐⭐⭐⭐</option>
+          <option value="3">3 Stars ⭐⭐⭐</option>
+          <option value="2">2 Stars ⭐⭐</option>
+          <option value="1">1 Star ⭐</option>
+        </select>
+      </div>
+
+      <button (click)="exportRatings()" class="export-btn" *ngIf="filteredRatings.length > 0">
+        <i class="fa-solid fa-download"></i>
+        Export to Excel
+      </button>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info" *ngIf="ratings.length > 0 && (filteredRatings.length !== ratings.length || ratingSearchTerm || ratingFilterRating !== 'all')">
+      <p>
+        Showing <strong>{{ filteredRatings.length }}</strong> of <strong>{{ ratings.length }}</strong> ratings
+        <span *ngIf="ratingFilterRating !== 'all'"> • Filtered by: {{ ratingFilterRating }} stars</span>
+        <span *ngIf="ratingSearchTerm"> • Search: "{{ ratingSearchTerm }}"</span>
+      </p>
+      <button (click)="ratingSearchTerm=''; ratingFilterRating='all'; applyRatingFilters()" class="clear-filters-btn">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        Clear All Filters
+      </button>
+    </div>
+
+    <!-- Rating Distribution Chart -->
+    <div class="rating-distribution" *ngIf="ratings.length > 0">
+      <h4>Rating Distribution</h4>
+      <div class="distribution-bars">
+        <div class="distribution-row" *ngFor="let star of [5, 4, 3, 2, 1]">
+          <span class="star-label">{{ star }} ⭐</span>
+          <div class="bar-container">
+            <div 
+              class="bar-fill" 
+              [class.rating-excellent]="star === 5"
+              [class.rating-good]="star === 4"
+              [class.rating-average]="star === 3"
+              [class.rating-poor]="star === 2"
+              [class.rating-bad]="star === 1"
+              [style.width.%]="getRatingPercentage(getRatingDistribution()[star])">
+            </div>
+          </div>
+          <span class="bar-count">{{ getRatingDistribution()[star] }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ratings Table -->
+    <div class="ratings-table-wrapper" *ngIf="!ratingsLoading && filteredRatings.length > 0">
+      <table class="ratings-table">
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Rating</th>
+            <th>Review</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rating of filteredRatings" [class]="getRatingBadgeClass(rating.rating)">
+            <td class="order-id">#{{ rating.order_id }}</td>
+            <td class="customer-info">
+              <div class="customer-name">{{ rating.user_name || 'Anonymous' }}</div>
+              <div class="customer-email">{{ rating.user_email || 'N/A' }}</div>
+            </td>
+            <td class="product-name">{{ rating.product_name || 'Product #' + rating.product_id }}</td>
+            <td class="rating-stars">
+              <div class="stars-display" [style.color]="getRatingColor(rating.rating)">
+                <i *ngFor="let filled of getStarArray(rating.rating)" 
+                   [class]="filled ? 'fa-solid fa-star' : 'fa-regular fa-star'">
+                </i>
+              </div>
+              <span class="rating-number">{{ rating.rating }}/5</span>
+            </td>
+            <td class="review-text">
+              <div class="review-content" *ngIf="rating.review">{{ rating.review }}</div>
+              <div class="no-review" *ngIf="!rating.review">
+                <em>No review provided</em>
+              </div>
+            </td>
+            <td class="rating-date">{{ formatRatingDate(rating.created_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="ratingsLoading" class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading ratings...</p>
+    </div>
+
+    <!-- No Ratings State -->
+    <div *ngIf="!ratingsLoading && ratings.length === 0" class="no-ratings">
+      <i class="fa-solid fa-star"></i>
+      <h4>No Ratings Yet</h4>
+      <p>Customer ratings will appear here once orders are completed and rated.</p>
+    </div>
+
+    <!-- No Results After Filter -->
+    <div *ngIf="!ratingsLoading && ratings.length > 0 && filteredRatings.length === 0" class="no-results">
+      <i class="fa-solid fa-search"></i>
+      <h4>No Results Found</h4>
+      <p>No ratings match your current search and filter criteria.</p>
+      <button (click)="ratingSearchTerm=''; ratingFilterRating='all'; applyRatingFilters()" class="clear-btn">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages View -->
+  <div *ngIf="currentView === 'messages'" class="messages-section">
+    <app-message></app-message>
+  </div>
+
+  <!-- Inventory Management View -->
+  <div *ngIf="currentView === 'inventory'" class="inventory-section">
+    <div class="inventory-header">
+      <h3><i class="fa-solid fa-warehouse"></i> Inventory Management</h3>
+      <div class="inventory-controls">
+        <div class="inventory-search">
+          <i class="fa-solid fa-search"></i>
+          <input 
+            type="text" 
+            [(ngModel)]="inventorySearchTerm" 
+            (input)="filterInventory()"
+            placeholder="Search product or size..."
+            class="search-input">
+          <button *ngIf="inventorySearchTerm" (click)="inventorySearchTerm=''; filterInventory()" class="clear-search">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        <button (click)="toggleLowStockFilter()" class="low-stock-filter-btn" [class.active]="showOnlyLowStock">
+          <i class="fa-solid fa-exclamation-triangle"></i>
+          Low Stock Only
+          <span class="low-stock-count" *ngIf="getLowStockCount() > 0">({{ getLowStockCount() }})</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="inventoryLoading" class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading inventory...</p>
+    </div>
+
+    <!-- Inventory Table -->
+    <div *ngIf="!inventoryLoading" class="inventory-table-container">
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product</th>
+            <th class="size-column">Size</th>
+            <th class="starting-stock-column">Starting Stock</th>
+            <th class="current-stock-column">Current Stock</th>
+            <th class="confirmed-orders-column">Confirmed Orders</th>
+            <th class="sold-column">Sold</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let entry of filteredInventory">
+            <tr *ngFor="let row of entry.sizes">
+              <td class="product-image">
+                <img [src]="getImageUrl(entry.product.image)" [alt]="entry.product.name" class="inventory-product-img" (error)="onImageError($event)">
+              </td>
+              <td class="product-name">
+                <i class="fa-solid fa-box"></i>
+                {{ entry.product.name }}
+              </td>
+              <td class="size" data-label="Size">
+                <span class="size-badge">{{ row.size }}</span>
+              </td>
+              <td class="starting-stock" data-label="Starting Stock">{{ row.starting }}</td>
+              <td class="current-stock" data-label="Current Stock">
+                <span class="stock-badge" [class.low-stock]="row.current < 10">
+                  {{ row.current }}
+                </span>
+              </td>
+              <td class="confirmed-orders" data-label="Confirmed Orders">
+                <span class="confirmed-badge">{{ row.confirmedOrders }}</span>
+              </td>
+              <td class="sold" data-label="Sold">{{ row.sold }}</td>
+              <td class="action">
+                <button (click)="openAddStockModal(row)" class="add-stock-btn">
+                  <i class="fa-solid fa-plus"></i>
+                  Add Stock
+                </button>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+
+      <!-- No Inventory State -->
+      <div *ngIf="filteredInventory.length === 0 && inventoryItems.length === 0" class="no-inventory">
+        <i class="fa-solid fa-warehouse"></i>
+        <h4>No Inventory Found</h4>
+        <p>No products with sizes available. Add products with size options to see them here.</p>
+      </div>
+
+      <!-- No Results After Filter -->
+      <div *ngIf="filteredInventory.length === 0 && inventoryItems.length > 0" class="no-results">
+        <i class="fa-solid fa-search"></i>
+        <h4>No Results Found</h4>
+        <p>No inventory items match your search criteria.</p>
+        <button (click)="inventorySearchTerm=''; filterInventory()" class="clear-btn">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear Search
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div *ngIf="showAddStockModal" class="modal-overlay" (click)="closeAddStockModal()">
+    <div class="modal-content stock-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-plus-circle"></i> Add Stock</h3>
+        <button class="close-btn" (click)="closeAddStockModal()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedInventoryItem">
+        <div class="stock-info">
+          <p class="product-info">
+            <strong>Product:</strong> {{ selectedInventoryItem.productName }}<br>
+            <strong>Size:</strong> <span class="size-badge">{{ selectedInventoryItem.size }}</span><br>
+            <strong>Current Stock:</strong> <span class="stock-value">{{ selectedInventoryItem.current }}</span>
+          </p>
+          
+          <div class="quantity-section">
+            <label for="addStockQuantity" class="quantity-label">
+              <i class="fa-solid fa-box"></i>
+              Quantity to Add <span class="required"></span>
+            </label>
+            <input 
+              type="number" 
+              id="addStockQuantity"
+              [(ngModel)]="addStockQuantity" 
+              class="quantity-input"
+              placeholder="Enter quantity"
+              min="1"
+              autocomplete="off"
+            />
+            <small class="quantity-helper-text">
+              New stock will be: <strong>{{ selectedInventoryItem.current + (addStockQuantity || 0) }}</strong>
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button 
+          (click)="confirmAddStock()"
+          class="confirm-stock-btn"
+          [disabled]="!addStockQuantity || addStockQuantity <= 0">
+          <i class="fa-solid fa-check"></i>
+          Confirm
+        </button>
+        <button (click)="closeAddStockModal()" class="cancel-btn">
+          <i class="fa-solid fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+<!-- Order Details Modal -->
+<div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-file-invoice"></i> Order Details</h3>
+      <button class="close-btn" (click)="closeOrderModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedOrder">
+      <!-- Order Information -->
+      <div class="order-info-section">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Order #:</label>
+            <span class="order-number">{{ selectedOrder.id }}</span>
+          </div>
+          <div class="info-item">
+            <label>Customer:</label>
+            <span class="customer-name">{{ selectedOrder.customer_name || selectedOrder.customer }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.customer_cellphone || selectedOrder.cellphone">
+            <label>Cellphone:</label>
+            <span class="cellphone-number">{{ selectedOrder.customer_cellphone || selectedOrder.cellphone }}</span>
+          </div>
+          <div class="info-item">
+            <label>Product:</label>
+            <span class="product-name">{{ selectedOrder.product }}</span>
+          </div>
+          <div class="info-item">
+            <label>Quantity:</label>
+            <span class="quantity-value">{{ selectedOrder.quantity }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.size">
+            <label>Size:</label>
+            <span class="size-value">{{ selectedOrder.size }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.status === 'approved' || selectedOrder.status === 'ready-for-pickup' || selectedOrder.status === 'completed'">
+            <label>Amount Paid:</label>
+            <span class="amount-paid-value">₱{{ getOrderTotal(selectedOrder) | number:'1.2-2' }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.pickup_date && selectedOrder.status === 'pending'">
+            <label>Pickup Date:</label>
+            <span class="pickup-date-value">{{ selectedOrder.pickup_date | date:'MMM d, yyyy' }}</span>
+          </div>
+          <!-- Show pickup date for other statuses except completed -->
+          <div class="info-item" *ngIf="selectedOrder.pickup_date && selectedOrder.status !== 'pending' && selectedOrder.status !== 'completed'">
+            <label>Pickup Date:</label>
+            <span class="pickup-date-value">{{ selectedOrder.pickup_date | date:'MMM d, yyyy' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedOrder.status)">
+              <i class="fa-solid" [ngClass]="{
+                'fa-clock': selectedOrder.status === 'pending',
+                'fa-check-circle': selectedOrder.status === 'approved', 
+                'fa-times-circle': selectedOrder.status === 'declined',
+                'fa-box-open': selectedOrder.status === 'ready-for-pickup',
+                'fa-check-double': selectedOrder.status === 'completed'
+              }"></i>
+              {{ selectedOrder.status === 'ready-for-pickup' ? 'Ready for Pickup' : (selectedOrder.status | titlecase) }}
+            </span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.or_number">
+            <label>OR Number:</label>
+            <span class="or-number-value">{{ selectedOrder.or_number }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.created_at">
+            <label>Order Date:</label>
+            <span class="order-date">{{ selectedOrder.created_at | date:'MMM d, yyyy' }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.remarks && selectedOrder.status === 'declined'">
+            <label>Decline Reason:</label>
+            <span class="decline-remarks">{{ selectedOrder.remarks }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedOrder.completion_remarks && selectedOrder.status === 'completed'">
+            <label>Completion Remarks:</label>
+            <span class="completion-remarks">{{ selectedOrder.completion_remarks }}</span>
+          </div>
+          <div class="info-item remarks-action" *ngIf="selectedOrder.status === 'completed'">
+            <label>Add/Edit Remarks:</label>
+            <button class="remarks-btn" (click)="openRemarksModal(selectedOrder)" title="Add or edit completion remarks">
+              <i class="fa-solid fa-comment-dots"></i> 
+              {{ selectedOrder.completion_remarks ? 'Edit Remarks' : 'Add Remarks' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Image Section -->
+      <div class="product-image-section" *ngIf="selectedOrder">
+        <h4><i class="fa-solid fa-image"></i> Product Image</h4>
+        <div class="item-image">
+          <div class="image-container">
+            <img 
+              [src]="getImageUrl(getProductImage(selectedOrder.product))" 
+              [alt]="selectedOrder.product"
+              class="product-image"
+              loading="lazy"
+              (error)="onImageError($event)">
+            <div class="image-overlay">
+              <i class="fa-solid fa-eye"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="action-section" *ngIf="selectedOrder?.status === 'pending'">
+        <button 
+          (click)="approveOrderFromModal()"
+          class="modal-approve-btn">
+          <i class="fa-solid fa-check"></i>
+          Approve Order
+        </button>
+        <button 
+          (click)="declineOrderFromModal()"
+          class="modal-decline-btn">
+          <i class="fa-solid fa-times"></i>
+          Decline Order
+        </button>
+      </div>
+      <div class="action-section" *ngIf="selectedOrder?.status === 'pending-production'">
+        <button 
+          (click)="acceptProductionOrderFromModal()"
+          class="modal-approve-btn">
+          <i class="fa-solid fa-check-circle"></i>
+          Accept Production Order
+        </button>
+        <button 
+          (click)="declineOrderFromModal()"
+          class="modal-decline-btn">
+          <i class="fa-solid fa-times"></i>
+          Decline Order
+        </button>
+      </div>
+      <div class="action-section" *ngIf="selectedOrder?.status === 'ready-for-pickup'">
+        <button 
+          (click)="confirmPickupFromModal()"
+          class="modal-approve-btn">
+          <i class="fa-solid fa-check-circle"></i>
+          Confirm Customer Pickup
+        </button>
+      </div>
+      <button (click)="closeOrderModal()" class="close-modal-btn">
+        <i class="fa-solid fa-times"></i>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- OR Number Modal -->
+<div class="modal-overlay" *ngIf="showOrNumberModal" (click)="closeOrNumberModal()">
+  <div class="modal-content or-number-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-receipt"></i> Official Receipt Number</h3>
+      <button class="close-btn" (click)="closeOrNumberModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="processingOrder">
+      <div class="or-number-info">
+        <p class="order-summary">
+          <strong>Order #{{ processingOrder.id }}</strong><br>
+          <span class="product-name">{{ processingOrder.product }}</span><br>
+          <span class="customer-name">Customer: {{ processingOrder.customer_name || processingOrder.customer }}</span>
+          <span class="cellphone-number" *ngIf="processingOrder.customer_cellphone || processingOrder.cellphone"><br>Phone: {{ processingOrder.customer_cellphone || processingOrder.cellphone }}</span>
+        </p>
+        
+        <div class="or-number-section">
+          <label for="orNumber" class="or-label">
+            <i class="fa-solid fa-file-invoice"></i>
+            Official Receipt Number <span class="required"></span>
+          </label>
+          <input 
+            type="text" 
+            id="orNumber"
+            [(ngModel)]="orNumber" 
+            class="or-number-input"
+            placeholder="Enter OR Number (e.g., OR-12345)"
+            maxlength="50"
+            autocomplete="off"
+          />
+          <small class="or-helper-text">
+            Enter the Official Receipt Number for this completed transaction
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        (click)="submitOrNumberAndConfirmPickup()"
+        class="confirm-pickup-btn"
+        [disabled]="!orNumber || orNumber.trim() === ''">
+        <i class="fa-solid fa-check-circle"></i>
+        Confirm Pickup
+      </button>
+      <button (click)="closeOrNumberModal()" class="cancel-btn">
+        <i class="fa-solid fa-times"></i>
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Completion Remarks Modal -->
+<div class="modal-overlay" *ngIf="showRemarksModal" (click)="closeRemarksModal()">
+  <div class="modal-content remarks-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-comment-dots"></i> Completion Remarks</h3>
+      <button class="close-btn" (click)="closeRemarksModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="remarksOrder">
+      <div class="remarks-info">
+        <p class="order-summary">
+          <strong>Order #{{ remarksOrder.id }}</strong><br>
+          <span class="product-name">{{ remarksOrder.product }}</span><br>
+          <span class="customer-name">Customer: {{ remarksOrder.customer_name || remarksOrder.customer }}</span>
+        </p>
+        
+        <div class="size-change-section">
+          <label for="remarksSize" class="size-label">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            Change Size (Optional)
+          </label>
+          <select 
+            id="remarksSize"
+            [(ngModel)]="selectedSize" 
+            class="size-select"
+          >
+            <option [value]="remarksOrder.size || ''">{{ remarksOrder.size || 'No Size' }} (Current)</option>
+            <option *ngFor="let size of getFilteredSizes()" [value]="size">{{ size }}</option>
+          </select>
+          <small class="size-helper-text">
+            <i class="fa-solid fa-info-circle"></i>
+            Select a different size if needed. Changes will be reflected in all reports.
+          </small>
+        </div>
+        
+        <div class="remarks-section">
+          <label for="completionRemarks" class="remarks-label">
+            <i class="fa-solid fa-sticky-note"></i>
+            Completion Remarks
+          </label>
+          <textarea 
+            id="completionRemarks"
+            [(ngModel)]="completionRemarks" 
+            class="remarks-textarea"
+            placeholder="Enter completion remarks or notes about this completed order..."
+            rows="4"
+            maxlength="500"
+            autocomplete="off"
+          ></textarea>
+          <small class="remarks-helper-text">
+            <span class="char-count">{{ completionRemarks.length || 0 }}/500 characters</span>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        (click)="submitCompletionRemarks()"
+        class="save-remarks-btn">
+        <i class="fa-solid fa-save"></i>
+        Save Remarks
+      </button>
+      <button (click)="closeRemarksModal()" class="cancel-btn">
+        <i class="fa-solid fa-times"></i>
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
