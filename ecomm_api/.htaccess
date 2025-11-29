@@ -13,7 +13,7 @@
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /localfit%20-%20Copy/ecomm_api/
+  RewriteBase /localfit-Copy/ecomm_api/
 
   # Pass Authorization header
   RewriteCond %{HTTP:Authorization} .
