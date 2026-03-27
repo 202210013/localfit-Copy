@@ -531,6 +531,10 @@
     opacity: 1;
 }
 
+.user-item.has-unread .user-actions {
+    opacity: 1;
+}
+
 .unread-badge {
     background: #ef4444;
     color: white;
@@ -540,6 +544,14 @@
     border-radius: 10px;
     min-width: 16px;
     text-align: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    animation: unreadPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes unreadPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
 }
 
 .action-arrow {

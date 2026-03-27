@@ -40,14 +40,10 @@ export class LoginECommComponent {
         console.log('Login response:', response); // Add debugging
         
         if (response && response.token && response.user_id) {
-          // Store in AuthService
-          this.authService.setToken(response.token);
-          this.authService.setUserId(response.user_id);
-          
-          // Also store in localStorage for direct access
-          localStorage.setItem('user_email', email);
-          localStorage.setItem('auth_token', response.token); // Add this line
-          localStorage.setItem('user_id', response.user_id.toString());
+          // Keep admin auth isolated per tab/session so it does not affect user login.
+          sessionStorage.setItem('admin_user_email', email);
+          sessionStorage.setItem('admin_auth_token', response.token);
+          sessionStorage.setItem('admin_user_id', response.user_id.toString());
           
           Swal.fire({
             icon: 'success',

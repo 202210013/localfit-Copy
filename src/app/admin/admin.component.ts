@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,8 @@ import Swal from 'sweetalert2';
 import { ProductService } from '../services/e-comm.service';
 import { environment } from '../../environments/environment';
 import { MessageComponent } from '../message/message.component';
+import { Subscription, forkJoin, interval, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 interface Order {
   id: number;
@@ -110,7 +112,7 @@ interface ProfessionalReport {
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   // API and Base URLs
   private apiUrl: string = environment.apiUrl;
   private baseUrl: string = environment.imageBaseUrl;
@@ -221,6 +223,8 @@ export class AdminComponent implements OnInit {
   
   // Mobile menu state
   mobileMenuOpen: boolean = false;
+  unreadMessagesCount: number = 0;
+  private unreadPollingSub?: Subscription;
 
   constructor(private http: HttpClient, private router: Router, private productService: ProductService) {}
 
@@ -234,6 +238,113 @@ export class AdminComponent implements OnInit {
     this.fetchOrders();
     this.fetchProducts();
     this.calculateAnalytics();
+    this.refreshAdminUnreadMessages();
+    this.startAdminUnreadPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.unreadPollingSub?.unsubscribe();
+  }
+
+  private getAdminEmail(): string | null {
+    return sessionStorage.getItem('admin_user_email') || localStorage.getItem('user_email');
+  }
+
+  private getAdminToken(): string | null {
+    return sessionStorage.getItem('admin_auth_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+  }
+
+  private normalizeEmail(email: string | null | undefined): string {
+    return (email || '').trim().toLowerCase();
+  }
+
+  private getAdminReadStateKey(email: string): string {
+    return `message_last_read_admin_${email}`;
+  }
+
+  private getAdminReadState(): { [email: string]: number } {
+    const adminRaw = this.getAdminEmail() || '';
+    const adminNormalized = this.normalizeEmail(adminRaw);
+    const normalizedKey = this.getAdminReadStateKey(adminNormalized);
+    const legacyKey = this.getAdminReadStateKey(adminRaw);
+
+    try {
+      const raw = sessionStorage.getItem(normalizedKey) || sessionStorage.getItem(legacyKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      const normalized: { [email: string]: number } = {};
+
+      Object.keys(parsed || {}).forEach((key) => {
+        normalized[this.normalizeEmail(key)] = Number(parsed[key]) || 0;
+      });
+
+      return normalized;
+    } catch {
+      return {};
+    }
+  }
+
+  private parseMessageTimeMs(timestamp?: string | Date): number {
+    if (!timestamp) {
+      return 0;
+    }
+    const time = new Date(timestamp).getTime();
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  private startAdminUnreadPolling(): void {
+    this.unreadPollingSub = interval(4000).subscribe(() => {
+      this.refreshAdminUnreadMessages();
+    });
+  }
+
+  private refreshAdminUnreadMessages(): void {
+    const adminEmail = this.normalizeEmail(this.getAdminEmail());
+    if (!adminEmail) {
+      this.unreadMessagesCount = 0;
+      return;
+    }
+
+    const readState = this.getAdminReadState();
+
+    this.http.get<any[]>(`${this.apiUrl}all-users?currentUser=${encodeURIComponent(adminEmail)}`).pipe(
+      catchError(() => of([] as any[])),
+      map((users: any[]) => users || []),
+      map((users: any[]) => users.filter((user: any) => this.normalizeEmail(user.email) && this.normalizeEmail(user.email) !== adminEmail)),
+      map((users: any[]) => users.map((user: any) => this.normalizeEmail(user.email))),
+      map((emails: string[]) => Array.from(new Set(emails))),
+      switchMap((emails: string[]) => {
+        if (!emails.length) {
+          return of([] as Array<{ email: string; messages: any[] }>);
+        }
+
+        return forkJoin(emails.map((email: string) =>
+          this.http.get<any[]>(`${this.apiUrl}messages?user1=${encodeURIComponent(adminEmail)}&user2=${encodeURIComponent(email)}`).pipe(
+            map((messages: any[]) => ({ email, messages: messages || [] })),
+            catchError(() => of({ email, messages: [] as any[] }))
+          )
+        ));
+      })
+    ).subscribe((conversations: Array<{ email: string; messages: any[] }>) => {
+      let unread = 0;
+
+      conversations.forEach((conversation) => {
+        const otherUser = this.normalizeEmail(conversation.email);
+        const lastRead = readState[otherUser] || 0;
+
+        conversation.messages.forEach((message: any) => {
+          const sender = this.normalizeEmail(message.sender);
+          const recipient = this.normalizeEmail(message.recipient);
+          if (recipient === adminEmail && sender === otherUser) {
+            const messageTime = this.parseMessageTimeMs(message.timestamp);
+            if (!lastRead || messageTime > lastRead) {
+              unread += 1;
+            }
+          }
+        });
+      });
+
+      this.unreadMessagesCount = unread;
+    });
   }
 
   switchToInventory() {
@@ -372,7 +483,7 @@ export class AdminComponent implements OnInit {
     const size = this.selectedInventoryItem.size;
     
     // Debug: Check token availability
-    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+    const token = this.getAdminToken();
     console.log('ConfirmAddStock - Token available:', token ? 'YES' : 'NO');
     console.log('ConfirmAddStock - Product ID:', productId);
     console.log('ConfirmAddStock - Size:', size);
@@ -673,8 +784,8 @@ export class AdminComponent implements OnInit {
 
   // Helper method for headers
   private getHeaders(): HttpHeaders {
-    const userEmail = localStorage.getItem('user_email');
-    const token = localStorage.getItem('auth_token'); // Get the auth token
+    const userEmail = this.getAdminEmail();
+    const token = this.getAdminToken(); // Get the auth token
     
     const headers: any = {
       'Content-Type': 'application/json'
@@ -689,7 +800,7 @@ export class AdminComponent implements OnInit {
   }
 
  fetchOrders() {
-  const userEmail = localStorage.getItem('user_email');
+  const userEmail = this.getAdminEmail();
   
   if (!userEmail) {
     alert('User email not found. Please login again.');
@@ -701,7 +812,7 @@ export class AdminComponent implements OnInit {
 }
 
 private fetchYourProductsAndOrders(userEmail: string) {
-  const token = localStorage.getItem('auth_token');
+  const token = this.getAdminToken();
   
   if (!token) {
     alert('Authentication token not found. Please login again.');
@@ -818,8 +929,8 @@ private fetchYourProductsAndOrders(userEmail: string) {
 }
 
   approveOrder(order: Order) {
-    const userEmail = localStorage.getItem('user_email');
-    const token = localStorage.getItem('auth_token');
+    const userEmail = this.getAdminEmail();
+    const token = this.getAdminToken();
     
     if (!token) {
       alert('Authentication token not found. Please login again.');
@@ -903,8 +1014,8 @@ private fetchYourProductsAndOrders(userEmail: string) {
   }
 
   private processOrderDecline(order: Order, remarks: string) {
-    const userEmail = localStorage.getItem('user_email');
-    const token = localStorage.getItem('auth_token');
+    const userEmail = this.getAdminEmail();
+    const token = this.getAdminToken();
     
     if (!token) {
       Swal.fire('Error', 'Authentication token not found. Please login again.', 'error');
@@ -994,8 +1105,8 @@ private fetchYourProductsAndOrders(userEmail: string) {
   }
 
   markReadyForPickup(order: Order) {
-    const userEmail = localStorage.getItem('user_email');
-    const token = localStorage.getItem('auth_token');
+    const userEmail = this.getAdminEmail();
+    const token = this.getAdminToken();
     
     if (!token) {
       alert('Authentication token not found. Please login again.');
@@ -1467,7 +1578,7 @@ private fetchYourProductsAndOrders(userEmail: string) {
 
   // Fetch products for analytics
   fetchProducts() {
-    const userEmail = localStorage.getItem('user_email');
+    const userEmail = this.getAdminEmail();
     if (!userEmail) return;
 
     this.http.get<any>(
@@ -3310,7 +3421,7 @@ private fetchYourProductsAndOrders(userEmail: string) {
   }
 
   updateProductionOrderStatus(order: Order, pickupDate: string) {
-    const token = localStorage.getItem('auth_token');
+    const token = this.getAdminToken();
     
     if (!token) {
       Swal.fire('Error', 'Authentication required', 'error');
@@ -3479,8 +3590,8 @@ private fetchYourProductsAndOrders(userEmail: string) {
       return;
     }
 
-    const token = localStorage.getItem('auth_token');
-    const userEmail = localStorage.getItem('user_email');
+    const token = this.getAdminToken();
+    const userEmail = this.getAdminEmail();
     
     if (!token || !userEmail) {
       Swal.fire({
@@ -3660,8 +3771,8 @@ private fetchYourProductsAndOrders(userEmail: string) {
       return;
     }
 
-    const token = localStorage.getItem('auth_token');
-    const userEmail = localStorage.getItem('user_email');
+    const token = this.getAdminToken();
+    const userEmail = this.getAdminEmail();
     
     if (!token || !userEmail) {
       Swal.fire('Error', 'Authentication required. Please login again.', 'error');
@@ -3879,7 +3990,12 @@ private fetchYourProductsAndOrders(userEmail: string) {
   }
 
   logout() {
-    localStorage.removeItem('user_email');
+    sessionStorage.removeItem('admin_user_email');
+    sessionStorage.removeItem('admin_auth_token');
+    sessionStorage.removeItem('admin_user_id');
+    // Legacy admin keys kept for backward compatibility cleanup only.
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_id');
     window.location.href = '/admin-login';
   }
 }

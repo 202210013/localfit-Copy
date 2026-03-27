@@ -17,8 +17,18 @@ export class ProductService {
 
     constructor(private http: HttpClient, private authService: AuthService, private router: Router) { }
 
+    private getAuthToken(): string {
+    const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
+    if (isAdminRoute) {
+        return sessionStorage.getItem('admin_auth_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
+    }
+
+    return localStorage.getItem('token') || '';
+}
+
     private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+    const token = this.getAuthToken();
     return new HttpHeaders({
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
@@ -69,7 +79,7 @@ createProduct(product: any): Observable<any> {
     }
 
     // Create headers without Content-Type for FormData (browser sets it automatically)
-    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+    const token = this.getAuthToken();
     const headers = new HttpHeaders({
         'Authorization': token ? `Bearer ${token}` : '',
         'Accept': 'application/json'
@@ -96,7 +106,7 @@ readOneProduct(productId: number): Observable<any> {
 
 updateProduct(productId: number, formData: FormData): Observable<any> {
     // Create headers without Content-Type for FormData (browser sets it automatically)
-    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+    const token = this.getAuthToken();
     console.log('UpdateProduct - Token from localStorage:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN');
     console.log('UpdateProduct - Product ID:', productId);
     

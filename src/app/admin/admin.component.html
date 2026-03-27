@@ -48,6 +48,7 @@
         class="nav-btn">
         <i class="fa-solid fa-message"></i>
         <span>Messages</span>
+        <span class="messages-nav-badge" *ngIf="unreadMessagesCount > 0">{{ unreadMessagesCount }}</span>
       </button>
       <button 
         [class.active]="currentView === 'inventory'" 
@@ -73,7 +74,7 @@
   </aside>
 
   <!-- Main Content Area -->
-  <main class="main-content">
+  <main class="main-content" [class.messages-view]="currentView === 'messages'">
 
  <!-- Time Period Filter -->
   <div class="date-filter-section" *ngIf="currentView === 'analytics'">

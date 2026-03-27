@@ -72,6 +72,7 @@
             <i class="fa-solid fa-users"></i>
             Conversations
             <span class="users-count">({{ filteredUsers().length }})</span>
+            <span class="unread-badge" *ngIf="getTotalUnreadCount() > 0">{{ getTotalUnreadCount() }}</span>
           </h3>
         </div>
         
@@ -80,6 +81,7 @@
             <li
               *ngFor="let user of filteredUsers()"
               [class.active]="user.email === selectedRecipient?.email"
+              [class.has-unread]="getUnreadCount(user.email) > 0"
               (click)="selectRecipient(user)"
               class="user-item"
               tabindex="0"
@@ -102,6 +104,7 @@
                 </div>
               </div>
               <div class="user-actions">
+                <span class="unread-badge" *ngIf="getUnreadCount(user.email) > 0">{{ getUnreadCount(user.email) }}</span>
                 <i class="fa-solid fa-chevron-right action-arrow"></i>
               </div>
             </li>
@@ -121,7 +124,6 @@
         <button class="back-home-btn" (click)="goToProductListing()">
           <i class="fa-solid fa-home"></i>
           <span>Back to Homepage</span>
-          <i class="fa-solid fa-external-link-alt"></i>
         </button>
       </div>
     </div>

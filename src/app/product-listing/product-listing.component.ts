@@ -8,6 +8,9 @@ import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { Subscription, forkJoin, interval, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 
 @Component({
@@ -41,6 +44,7 @@ export class AllProductsComponent implements OnInit {
   searchTerm: string = ''; // <-- Add this
 
   unreadMessages: number = 0; // Add this property
+  private unreadPollingSub?: Subscription;
 
   readyForPickupCount: number = 0; // Counter for ready for pickup orders
 
@@ -75,7 +79,7 @@ export class AllProductsComponent implements OnInit {
   }
 
 
-  constructor(private productService: ProductService, public authService: AuthService, private router: Router) { }
+  constructor(private productService: ProductService, public authService: AuthService, private router: Router, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.productForm = new FormGroup({
@@ -96,6 +100,7 @@ export class AllProductsComponent implements OnInit {
     this.getAllProducts();
     this.getCarts();
     this.getUnreadMessages();
+    this.startUnreadMessagesPolling();
     this.getReadyForPickupCount(); // Get ready for pickup orders count
     this.getUserPostedProducts(); // Fetch products posted by the current user
     this.selectedCategory = 'all';
@@ -642,18 +647,101 @@ logout() {
     }
   }
 
-  // Add a method to fetch unread messages
+  private normalizeEmail(email: string | null | undefined): string {
+    return (email || '').trim().toLowerCase();
+  }
+
+  private getUserEmail(): string {
+    return this.normalizeEmail(localStorage.getItem('user_email'));
+  }
+
+  private getUserReadStateKey(email: string): string {
+    return `message_last_read_user_${email}`;
+  }
+
+  private getUserReadState(): { [email: string]: number } {
+    const currentUserRaw = localStorage.getItem('user_email') || '';
+    const currentUser = this.getUserEmail();
+    const normalizedKey = this.getUserReadStateKey(currentUser);
+    const legacyKey = this.getUserReadStateKey(currentUserRaw);
+
+    try {
+      const raw = sessionStorage.getItem(normalizedKey) || sessionStorage.getItem(legacyKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      const normalized: { [email: string]: number } = {};
+
+      Object.keys(parsed || {}).forEach((key) => {
+        normalized[this.normalizeEmail(key)] = Number(parsed[key]) || 0;
+      });
+
+      return normalized;
+    } catch {
+      return {};
+    }
+  }
+
+  private parseMessageTimeMs(timestamp?: string | Date): number {
+    if (!timestamp) {
+      return 0;
+    }
+    const time = new Date(timestamp).getTime();
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  private startUnreadMessagesPolling(): void {
+    this.unreadPollingSub = interval(4000).subscribe(() => {
+      this.getUnreadMessages();
+    });
+  }
+
+  // Fetch unread messages count for navbar message icon.
   getUnreadMessages(): void {
-    this.productService.getUnreadMessages().subscribe({
-      next: (response: any) => {
-        console.log('Unread messages API response:', response);
-        // Adjust this line based on your actual API response structure:
-        this.unreadMessages = response.count || 0;
-      },
-      error: (error: any) => {
-        console.error('Error fetching unread messages:', error);
-        this.unreadMessages = 0;
-      }
+    const currentUser = this.getUserEmail();
+    if (!currentUser) {
+      this.unreadMessages = 0;
+      return;
+    }
+
+    const readState = this.getUserReadState();
+
+    this.http.get<any[]>(`${environment.apiUrl}all-users?currentUser=${encodeURIComponent(currentUser)}`).pipe(
+      catchError(() => of([] as any[])),
+      map((users: any[]) => users || []),
+      map((users: any[]) => users.filter((user: any) => this.normalizeEmail(user.email) && this.normalizeEmail(user.email) !== currentUser)),
+      map((users: any[]) => users.map((user: any) => this.normalizeEmail(user.email))),
+      map((emails: string[]) => Array.from(new Set(emails))),
+      switchMap((emails: string[]) => {
+        if (!emails.length) {
+          return of([] as Array<{ email: string; messages: any[] }>);
+        }
+
+        return forkJoin(emails.map((email: string) =>
+        this.http.get<any[]>(`${environment.apiUrl}messages?user1=${encodeURIComponent(currentUser)}&user2=${encodeURIComponent(email)}`).pipe(
+          map((messages: any[]) => ({ email, messages: messages || [] })),
+          catchError(() => of({ email, messages: [] as any[] }))
+        )
+        ));
+      })
+    ).subscribe((conversations: Array<{ email: string; messages: any[] }>) => {
+      let unread = 0;
+
+      conversations.forEach((conversation) => {
+        const otherUser = this.normalizeEmail(conversation.email);
+        const lastRead = readState[otherUser] || 0;
+
+        conversation.messages.forEach((message: any) => {
+          const sender = this.normalizeEmail(message.sender);
+          const recipient = this.normalizeEmail(message.recipient);
+          if (recipient === currentUser && sender === otherUser) {
+            const messageTime = this.parseMessageTimeMs(message.timestamp);
+            if (!lastRead || messageTime > lastRead) {
+              unread += 1;
+            }
+          }
+        });
+      });
+
+      this.unreadMessages = unread;
     });
   }
 
@@ -731,6 +819,7 @@ ngOnDestroy(): void {
   if (this.adInterval) {
     clearInterval(this.adInterval);
   }
+  this.unreadPollingSub?.unsubscribe();
 }
 
 // Quantity display methods
