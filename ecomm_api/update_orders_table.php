@@ -2,11 +2,13 @@
 // PHP Script to add created_at column to orders table
 // Run this by visiting: http://localhost/E-comms/ecomm/e-comm/ecomm_api/update_orders_table.php
 
+require_once __DIR__ . '/config/database.php';
+
 header('Content-Type: text/html; charset=utf-8');
 echo "<h2>🔧 Orders Table Update Script</h2>";
 
 // Database connection
-$mysqli = new mysqli("localhost", "root", "", "ecomm_db");
+$mysqli = new mysqli(SERVER, USER, PASSWORD, DATABASE);
 
 if ($mysqli->connect_errno) {
     echo "<p style='color: red;'>❌ Failed to connect to database: " . $mysqli->connect_error . "</p>";

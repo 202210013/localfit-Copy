@@ -786,9 +786,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   private getHeaders(): HttpHeaders {
     const userEmail = this.getAdminEmail();
     const token = this.getAdminToken(); // Get the auth token
+    const adminUserId = sessionStorage.getItem('admin_user_id') || localStorage.getItem('userId') || '';
     
     const headers: any = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-user-id': adminUserId
     };
     
     // Add Authorization header if token exists

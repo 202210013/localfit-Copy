@@ -176,7 +176,7 @@ class ProductService
         $stmt->execute();
 
         $products_arr = ["records" => []];
-        $base_url = 'https://images.localfit.store/';
+        $base_url = rtrim(env('IMAGE_BASE_URL', 'https://images.localfit.store/'), '/') . '/';
     
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $row['image'] = $base_url . $row['image'];

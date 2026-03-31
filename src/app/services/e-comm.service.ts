@@ -18,20 +18,22 @@ export class ProductService {
     constructor(private http: HttpClient, private authService: AuthService, private router: Router) { }
 
     private getAuthToken(): string {
-    const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-
-    if (isAdminRoute) {
-        return sessionStorage.getItem('admin_auth_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
-    }
-
-    return localStorage.getItem('token') || '';
+    return sessionStorage.getItem('admin_auth_token')
+      || localStorage.getItem('auth_token')
+      || localStorage.getItem('token')
+      || '';
 }
 
-    private getHeaders(): HttpHeaders {
-    const token = this.getAuthToken();
+        private getHeaders(): HttpHeaders {
+        const token = this.getAuthToken();
+        const userId = sessionStorage.getItem('admin_user_id')
+            || localStorage.getItem('userId')
+            || '';
+
     return new HttpHeaders({
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
+            'x-user-id': userId,
         'Accept': 'application/json'
     });
 }
@@ -80,8 +82,10 @@ createProduct(product: any): Observable<any> {
 
     // Create headers without Content-Type for FormData (browser sets it automatically)
     const token = this.getAuthToken();
+    const userId = sessionStorage.getItem('admin_user_id') || localStorage.getItem('userId') || '';
     const headers = new HttpHeaders({
         'Authorization': token ? `Bearer ${token}` : '',
+        'x-user-id': userId,
         'Accept': 'application/json'
     });
 
@@ -107,11 +111,13 @@ readOneProduct(productId: number): Observable<any> {
 updateProduct(productId: number, formData: FormData): Observable<any> {
     // Create headers without Content-Type for FormData (browser sets it automatically)
     const token = this.getAuthToken();
+    const userId = sessionStorage.getItem('admin_user_id') || localStorage.getItem('userId') || '';
     console.log('UpdateProduct - Token from localStorage:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN');
     console.log('UpdateProduct - Product ID:', productId);
     
     const headers = new HttpHeaders({
         'Authorization': token ? `Bearer ${token}` : '',
+        'x-user-id': userId,
         'Accept': 'application/json'
     });
     
@@ -238,7 +244,7 @@ getMyPurchases(): Observable<any> {
 
 // Update order status (approve/decline)
 updateOrderStatus(orderId: number, status: string): Observable<any> {
-  return this.http.put(`${this.apiUrl}orders/${orderId}/status`, 
+    return this.http.put(`${this.apiUrl}orders/${orderId}`, 
     { status }, 
     { headers: this.getHeaders() }
   );

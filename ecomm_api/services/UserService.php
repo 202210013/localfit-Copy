@@ -245,7 +245,12 @@ public function registerUser($data) {
         }
 
         // Create upload directory if it doesn't exist
-        $uploadDir = "../e-comm-images/profile/";
+        $configuredUploadDir = env('PROFILE_UPLOAD_DIR', dirname(__DIR__, 2) . '/ecomm-images/profile');
+        $isAbsolutePath = preg_match('/^(?:[A-Za-z]:[\\\/]|[\\\/]{1,2})/', $configuredUploadDir) === 1;
+        if (!$isAbsolutePath) {
+            $configuredUploadDir = dirname(__DIR__) . '/' . ltrim($configuredUploadDir, '/\\');
+        }
+        $uploadDir = rtrim($configuredUploadDir, '/\\') . DIRECTORY_SEPARATOR;
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -257,7 +262,8 @@ public function registerUser($data) {
 
         if (move_uploaded_file($imageFile['tmp_name'], $uploadPath)) {
             // Update user profile with new image path
-            $imagePath = "e-comm-images/profile/" . $fileName;
+            $relativeDir = trim(env('PROFILE_IMAGE_RELATIVE_DIR', 'ecomm-images/profile'), '/\\');
+            $imagePath = $relativeDir . '/' . $fileName;
             $updateQuery = "UPDATE users SET profile_image = :imagePath, updated_at = NOW() WHERE id = :userId";
             $stmt = $this->conn->prepare($updateQuery);
             $stmt->bindParam(":imagePath", $imagePath);

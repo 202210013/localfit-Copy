@@ -1,8 +1,10 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: text/html; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
-$mysqli = new mysqli("localhost", "root", "", "ecomm_db");
+require_once __DIR__ . '/config/database.php';
+
+$mysqli = new mysqli(SERVER, USER, PASSWORD, DATABASE);
 
 if ($mysqli->connect_errno) {
     echo json_encode(["error" => "Failed to connect to DB"]);

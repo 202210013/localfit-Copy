@@ -1,21 +1,25 @@
 <?php
+require_once __DIR__ . '/env.php';
+
 date_default_timezone_set("Asia/Manila");
 set_time_limit(1000);
 
-define("SERVER", "localhost");
-define("DATABASE", "e-comm");
-define("USER", "root");
-define("PASSWORD", "");
+$timezone = env('APP_TIMEZONE', 'Asia/Manila');
+if (!empty($timezone)) {
+    date_default_timezone_set($timezone);
+}
 
-// define("SERVER", "localhost");
-// define("DATABASE", "u385622194_ecomms_db");
-// define("USER", "u385622194_ecomms");
-// define("PASSWORD", "E-comm1225");
-define("DRIVER", "mysql");
+define("SERVER", env('DB_HOST', 'localhost'));
+define("DATABASE", env('DB_NAME', 'e-comm'));
+define("USER", env('DB_USER', 'root'));
+define("PASSWORD", env('DB_PASSWORD', ''));
+define("DB_CHARSET", env('DB_CHARSET', 'utf8mb4'));
+
+define("DRIVER", env('DB_DRIVER', 'mysql'));
 
 class Connection
 {
-    private $connectionString = DRIVER . ":host=" . SERVER . ";dbname=" . DATABASE . ";charset=utf8mb4";
+    private $connectionString = DRIVER . ":host=" . SERVER . ";dbname=" . DATABASE . ";charset=" . DB_CHARSET;
     private $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
